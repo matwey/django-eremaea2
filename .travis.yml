@@ -19,6 +19,8 @@ install:
   - "pip install Django$DJANGO_VERSION"
   - "pip install djangorestframework"
   - "pip install dj-inmemorystorage"
+  - "pip install requests"
+  - "pip install cmdln"
 # command to run tests
 script:
   - "python setup.py test"
