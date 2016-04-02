@@ -4,18 +4,18 @@ from django.utils import timezone
 from os import path
 import mimetypes
 
-class Snapshot(models.Model):
-	def upload_to(instance, filename):
-		(mimetype, encoding) = mimetypes.guess_type(filename)
-		ext = mimetypes.guess_extension(mimetype)
-		collection = instance.collection.name
-		date = instance.date.strftime("%Y-%m-%d-%H-%M-%S")
-		newfilename = "{0}-{1}{2}".format(collection, date, ext)
-		return path.join(collection, newfilename)
+def snapshot_upload_to(instance, filename):
+	(mimetype, encoding) = mimetypes.guess_type(filename)
+	ext = mimetypes.guess_extension(mimetype)
+	collection = instance.collection.name
+	date = instance.date.strftime("%Y-%m-%d-%H-%M-%S")
+	newfilename = "{0}-{1}{2}".format(collection, date, ext)
+	return path.join(collection, newfilename)
 
+class Snapshot(models.Model):
 	collection = models.ForeignKey('Collection', on_delete=models.CASCADE, db_index=True)
 	date = models.DateTimeField(db_index=True, default=timezone.now)
-	file = models.FileField(max_length=256, upload_to=upload_to)
+	file = models.FileField(max_length=256, upload_to=snapshot_upload_to)
 	retention_policy = models.ForeignKey('RetentionPolicy', on_delete=models.PROTECT, db_index=True)
 
 	def save(self, *args, **kwargs):

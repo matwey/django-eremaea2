@@ -11,7 +11,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 setup(
 	name='django-eremaea2',
 	version='2.0.1',
-	packages=['eremaea','eremaea.ctl'],
+	packages=['eremaea','eremaea.ctl','eremaea.migrations'],
 	scripts=['eremaeactl'],
 	include_package_data=True,
 	license='BSD-2-Clause',
