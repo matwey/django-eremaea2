@@ -13,3 +13,9 @@ class Client(object):
 		if r.status_code == 201:
 			return True
 		r.raise_for_status()
+	def purge(self, retention_policy):
+		url = self.api + '/retention_policies/' + retention_policy + "/purge/"
+		r = requests.post(url)
+		if r.status_code == 201:
+			return True
+		r.raise_for_status()

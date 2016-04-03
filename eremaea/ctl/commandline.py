@@ -20,3 +20,10 @@ class CommandLine(cmdln.Cmdln):
 		"""
 		file = open(filename, 'rb')
 		Client(self.options.api_endpoint).upload(filename, file, collection, opts.retention_policy)
+	def do_purge(self, subcmd, opts, retention_policy):
+		"""${cmd_name}: purge retention policy
+
+		${cmd_usage}
+		${cmd_option_list}
+		"""
+		Client(self.options.api_endpoint).purge(retention_policy)
