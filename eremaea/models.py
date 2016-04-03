@@ -12,11 +12,23 @@ def snapshot_upload_to(instance, filename):
 	newfilename = "{0}-{1}{2}".format(collection, date, ext)
 	return path.join(collection, newfilename)
 
+class ExpiredSnapshotManager(models.Manager):
+	def get_queryset(self):
+		return super(ExpiredSnapshotManager, self).get_queryset(
+			).annotate(
+				expires=models.ExpressionWrapper(
+					F('date') + F('retention_policy__duration'),
+					output_field=models.DateTimeField())
+			).filter(expires__lt = timezone.now())
+
 class Snapshot(models.Model):
 	collection = models.ForeignKey('Collection', on_delete=models.CASCADE, db_index=True)
 	date = models.DateTimeField(db_index=True, default=timezone.now)
 	file = models.FileField(max_length=256, upload_to=snapshot_upload_to)
 	retention_policy = models.ForeignKey('RetentionPolicy', on_delete=models.PROTECT, db_index=True)
+
+	objects = models.Manager()
+	expired_objects = ExpiredSnapshotManager()
 
 	def save(self, *args, **kwargs):
 		if not self.retention_policy_id:
@@ -69,10 +81,4 @@ class RetentionPolicy(models.Model):
 		db_table = 'retention_policy'
 
 	def purge(self):
-		return Snapshot.objects.filter(retention_policy = self
-			).annotate(
-				expires=models.ExpressionWrapper(
-					F('date') + F('retention_policy__duration'),
-					output_field=models.DateTimeField()
-				)
-			).filter(expires__lt = timezone.now()).delete()
+		return Snapshot.expired_objects.filter(retention_policy = self).delete()
