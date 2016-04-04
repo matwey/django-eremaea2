@@ -12,7 +12,9 @@ setup(
 	name='django-eremaea2',
 	version='2.0.2',
 	packages=['eremaea','eremaea.ctl','eremaea.migrations'],
-	scripts=['eremaeactl'],
+	entry_points={'console_scripts': [
+		'eremaeactl = eremaea.ctl.commandline:execute_from_commandline',
+	]},
 	include_package_data=True,
 	license='BSD-2-Clause',
 	description='A simple Django application to store and show webcam snapshots',

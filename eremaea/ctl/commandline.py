@@ -1,5 +1,5 @@
 import cmdln
-from client import Client
+from eremaea.ctl.client import Client
 
 class CommandLine(cmdln.Cmdln):
 	name = "eremaeactl"
@@ -27,3 +27,7 @@ class CommandLine(cmdln.Cmdln):
 		${cmd_option_list}
 		"""
 		Client(self.options.api_endpoint).purge(retention_policy)
+
+def execute_from_commandline(argv=None):
+	cmd = CommandLine()
+	cmd.main(argv)
