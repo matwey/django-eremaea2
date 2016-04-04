@@ -6,6 +6,8 @@ import mimetypes
 
 def snapshot_upload_to(instance, filename):
 	(mimetype, encoding) = mimetypes.guess_type(filename)
+	if not mimetype and hasattr(instance.file.file, 'content_type'):
+		mimetype = instance.file.file.content_type
 	ext = mimetypes.guess_extension(mimetype)
 	collection = instance.collection.name
 	date = instance.date.strftime("%Y-%m-%d-%H-%M-%S")
