@@ -1,4 +1,5 @@
 import cmdln
+from eremaea.ctl.file import FileFactory
 from eremaea.ctl.client import Client
 
 class CommandLine(cmdln.Cmdln):
@@ -12,14 +13,13 @@ class CommandLine(cmdln.Cmdln):
 	@cmdln.alias("up")
 	@cmdln.option("-q", "--quite", action="store_true", help="be quite")
 	@cmdln.option("-r", dest="retention_policy", help="specify retention policy (optional)")
-	def do_upload(self, subcmd, opts, filename, collection):
+	def do_upload(self, subcmd, opts, file, collection):
 		"""${cmd_name}: upload file to storage
 
 		${cmd_usage}
 		${cmd_option_list}
 		"""
-		file = open(filename, 'rb')
-		Client(self.options.api_endpoint).upload(filename, file, collection, opts.retention_policy)
+		Client(self.options.api_endpoint).upload(FileFactory().create(file), collection, opts.retention_policy)
 	def do_purge(self, subcmd, opts, retention_policy):
 		"""${cmd_name}: purge retention policy
 
