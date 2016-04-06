@@ -1,9 +1,19 @@
-from django.test import LiveServerTestCase
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from eremaea import models
-from eremaea.ctl.file import ContentFile
-from eremaea.ctl.client import Client
 from datetime import datetime, timedelta
+from django.contrib.auth.models import User
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.test import LiveServerTestCase
+from eremaea import models
+from eremaea.ctl.client import Client
+from eremaea.ctl.file import ContentFile
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.views import APIView
+
+try:
+	from unittest.mock import patch
+except ImportError:
+	from mock import patch
 
 class ClientTest(LiveServerTestCase):
 	def setUp(self):
@@ -24,3 +34,13 @@ class ClientTest(LiveServerTestCase):
 		self.assertTrue(self.client.purge("hourly"))
 		snapshots = models.Snapshot.objects.all()
 		self.assertEqual(len(snapshots), 0)
+
+# Workaround for https://github.com/tomchristie/django-rest-framework/issues/2466
+# override_settings should have be used here
+@patch.object(APIView, 'authentication_classes', new = [TokenAuthentication])
+@patch.object(APIView, 'permission_classes', new = [IsAuthenticatedOrReadOnly])
+class TokenAuthClientTest(ClientTest):
+	def setUp(self):
+		user = User.objects.create(username="test")
+		token = Token.objects.create(user=user)
+		self.client = Client(self.live_server_url, token = token.key)
