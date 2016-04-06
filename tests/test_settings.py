@@ -2,6 +2,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 DEBUG = True
+DEBUG_PROPAGATE_EXCEPTIONS = True
 SECRET_KEY = 'fake-key'
 INSTALLED_APPS = [
 	'django.contrib.contenttypes',
@@ -10,6 +11,7 @@ INSTALLED_APPS = [
 	'inmemorystorage',
 	'eremaea',
 ]
+
 REST_FRAMEWORK = {
 	'DEFAULT_RENDERER_CLASSES': (
 		'rest_framework.renderers.JSONRenderer',
