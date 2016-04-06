@@ -12,6 +12,13 @@ INSTALLED_APPS = [
 	'eremaea',
 ]
 
+TEMPLATES = [{
+	'BACKEND': 'django.template.backends.django.DjangoTemplates',
+	'APP_DIRS': True,
+	'OPTIONS': {'debug': True,},
+	},
+]
+
 REST_FRAMEWORK = {
 	'DEFAULT_RENDERER_CLASSES': (
 		'rest_framework.renderers.JSONRenderer',
