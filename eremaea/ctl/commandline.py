@@ -2,7 +2,7 @@ import cmdln
 from eremaea.ctl.file import FileFactory
 from eremaea.ctl.client import Client
 
-class CommandLine(cmdln.Cmdln):
+class CommandLine(cmdln.Cmdln, object):
 	name = "eremaeactl"
 
 	def get_optparser(self):
