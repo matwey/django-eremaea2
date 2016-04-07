@@ -1,3 +1,4 @@
+from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from rest_framework import status
@@ -46,12 +47,15 @@ class RetentionPolicyTest(TestCase):
 		response = self.client.delete(url)
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 	def test_retention_purge1(self):
+		file = ContentFile(b"123")
+		file.name = "file.jpg"
 		retention_daily  = models.RetentionPolicy.objects.create(name='daily',  duration=timedelta(days=1))
 		retention_hourly = models.RetentionPolicy.objects.create(name='hourly', duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name='test', default_retention_policy=retention_hourly)
 		dates = [datetime.now(), datetime.now() - timedelta(minutes=30), datetime.now() - timedelta(minutes=90)]
-		snapshots = [models.Snapshot.objects.create(collection = collection, date = x) for x in dates]
-		snapshots.append(models.Snapshot.objects.create(collection = collection, date = dates[-1], retention_policy=retention_daily))
+		snapshots = [models.Snapshot.objects.create(collection = collection, date = x, file = file) for x in dates]
+		snapshots.append(models.Snapshot.objects.create(collection = collection, date = dates[-1], retention_policy = retention_daily, file = file))
+		storage2, filepath2 = snapshots[2].file.storage, snapshots[2].file.name
 		url = reverse('retention_policy-purge', args=['hourly'])
 		response = self.client.post(url)
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -60,3 +64,4 @@ class RetentionPolicyTest(TestCase):
 		self.assertEqual(snapshots2[0], snapshots[0])
 		self.assertEqual(snapshots2[1], snapshots[1])
 		self.assertEqual(snapshots2[2], snapshots[3])
+		self.assertFalse(storage2.exists(filepath2))

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.core.files.base import ContentFile as DjangoContentFile
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import LiveServerTestCase
@@ -28,9 +29,11 @@ class ClientTest(LiveServerTestCase):
 		self.assertEqual(snapshot.retention_policy, retention_policy)
 		self.assertEqual(snapshot.file.read(), content)
 	def test_purge1(self):
+		file = DjangoContentFile(b"123")
+		file.name = "file.jpg"
 		retention_policy = models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name="mycol", default_retention_policy=retention_policy)
-		models.Snapshot.objects.create(collection = collection, date = datetime.now() - timedelta(minutes=90))
+		models.Snapshot.objects.create(collection = collection, date = datetime.now() - timedelta(minutes=90), file=file)
 		self.assertTrue(self.client.purge("hourly"))
 		snapshots = models.Snapshot.objects.all()
 		self.assertEqual(len(snapshots), 0)

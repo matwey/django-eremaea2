@@ -14,6 +14,14 @@ def snapshot_upload_to(instance, filename):
 	newfilename = "{0}-{1}{2}".format(collection, date, ext)
 	return path.join(collection, newfilename)
 
+class SnapshotQuerySet(models.query.QuerySet):
+	# Django storage API doesn't support transactions
+	# We can't support bulk delete
+	def delete(self):
+		for x in self:
+			x.delete()
+	delete.queryset_only = False
+
 class ExpiredSnapshotManager(models.Manager):
 	def get_queryset(self):
 		return super(ExpiredSnapshotManager, self).get_queryset(
@@ -29,8 +37,8 @@ class Snapshot(models.Model):
 	file = models.FileField(max_length=256, upload_to=snapshot_upload_to)
 	retention_policy = models.ForeignKey('RetentionPolicy', on_delete=models.PROTECT, db_index=True)
 
-	objects = models.Manager()
-	expired_objects = ExpiredSnapshotManager()
+	objects = SnapshotQuerySet.as_manager()
+	expired_objects = ExpiredSnapshotManager.from_queryset(SnapshotQuerySet)()
 
 	def save(self, *args, **kwargs):
 		if not self.retention_policy_id:
