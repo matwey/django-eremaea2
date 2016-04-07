@@ -29,3 +29,10 @@ class Client(object):
 		if r.status_code == 201:
 			return True
 		r.raise_for_status()
+	def retention_policies(self):
+		url = self.api + '/retention_policies/'
+		headers = self._common_headers
+		r = requests.get(url, headers=headers)
+		if r.status_code == 200:
+			return [x["name"] for x in r.json()]
+		r.raise_for_status()

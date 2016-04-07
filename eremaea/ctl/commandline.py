@@ -29,13 +29,19 @@ class CommandLine(cmdln.Cmdln, object):
 		${cmd_option_list}
 		"""
 		self.client.upload(FileFactory().create(file), collection, opts.retention_policy)
-	def do_purge(self, subcmd, opts, retention_policy):
-		"""${cmd_name}: purge retention policy
+	@cmdln.option("--all", dest="all", action="store_true", help="purge all retention policies")
+	def do_purge(self, subcmd, opts, *retention_policies):
+		"""${cmd_name}: purge retention policies
 
 		${cmd_usage}
 		${cmd_option_list}
 		"""
-		self.client.purge(retention_policy)
+		if opts.all:
+			retention_policies = self.client.retention_policies()
+		if not retention_policies and not opts.all:
+			CommandLine.do_purge.optparser.print_help()
+		for x in retention_policies:
+			self.client.purge(x)
 
 def execute_from_commandline(argv=None):
 	cmd = CommandLine()

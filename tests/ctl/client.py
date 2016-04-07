@@ -37,6 +37,11 @@ class ClientTest(LiveServerTestCase):
 		self.assertTrue(self.client.purge("hourly"))
 		snapshots = models.Snapshot.objects.all()
 		self.assertEqual(len(snapshots), 0)
+	def test_retention_policy_list1(self):
+		models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
+		models.RetentionPolicy.objects.create(name="daily", duration=timedelta(days=1))
+		retention_policies = self.client.retention_policies()
+		self.assertListEqual(retention_policies, ["hourly", "daily"])
 
 # Workaround for https://github.com/tomchristie/django-rest-framework/issues/2466
 # override_settings should have be used here
