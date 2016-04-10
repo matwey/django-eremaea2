@@ -1,6 +1,7 @@
 # django-eremaea2
 
 [![Build Status](https://travis-ci.org/matwey/django-eremaea2.svg?branch=master)](https://travis-ci.org/matwey/django-eremaea2)
+[![PyPI version](https://badge.fury.io/py/django-eremaea2.svg)](https://badge.fury.io/py/django-eremaea2)
 
 django-eremaea2 is a simple [Django] application to store and manage webcam image snapshots.
 The application is built on top of [django-rest-framework] and provides REST API to access the files.
