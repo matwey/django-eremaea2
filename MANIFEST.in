@@ -1,5 +1,5 @@
 include README.md
 include runtests.py
 recursive-include tests *.py
-eremaea-purge@.service
-eremaea-purge@.timer
+include eremaea-purge@.service
+include eremaea-purge@.timer
