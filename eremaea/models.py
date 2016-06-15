@@ -5,6 +5,7 @@ from os import path
 import mimetypes
 
 def snapshot_upload_to(instance, filename):
+	prefix = "eremaea"
 	(mimetype, encoding) = mimetypes.guess_type(filename)
 	if not mimetype and hasattr(instance.file.file, 'content_type'):
 		mimetype = instance.file.file.content_type
@@ -12,7 +13,7 @@ def snapshot_upload_to(instance, filename):
 	collection = instance.collection.name
 	date = instance.date.strftime("%Y-%m-%d-%H-%M-%S")
 	newfilename = "{0}-{1}{2}".format(collection, date, ext)
-	return path.join(collection, newfilename)
+	return path.join(prefix, collection, newfilename)
 
 class SnapshotQuerySet(models.query.QuerySet):
 	# Django storage API doesn't support transactions
