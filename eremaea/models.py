@@ -2,10 +2,11 @@ from django.db import models, transaction
 from django.db.models import F,Q
 from django.utils import timezone
 from os import path
+from eremaea.conf import settings
 import mimetypes
 
 def snapshot_upload_to(instance, filename):
-	prefix = "eremaea"
+	prefix = settings.PATH
 	(mimetype, encoding) = mimetypes.guess_type(filename)
 	if not mimetype and hasattr(instance.file.file, 'content_type'):
 		mimetype = instance.file.file.content_type
