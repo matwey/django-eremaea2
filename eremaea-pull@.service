@@ -1,0 +1,8 @@
+[Unit]
+Description=Pull django-eremaea2 for %i
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/eremaeactl $EREMAEACTL_GLOBAL_OPTS pull $EREMAEACTL_PULL_OPTS
+Restart=no

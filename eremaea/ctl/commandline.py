@@ -1,6 +1,8 @@
 import cmdln
+import time
 from eremaea.ctl.file import FileFactory
 from eremaea.ctl.client import Client
+from django.utils.dateparse import parse_duration
 
 class CommandLine(cmdln.Cmdln, object):
 	name = "eremaeactl"
@@ -42,6 +44,20 @@ class CommandLine(cmdln.Cmdln, object):
 			CommandLine.do_purge.optparser.print_help()
 		for x in retention_policies:
 			self.client.purge(x)
+	@cmdln.option("-q", "--quite", action="store_true", help="be quite")
+	@cmdln.option("-i", "--interval", help="pull interval", default="1:00")
+	@cmdln.option("-r", dest="retention_policy", help="specify retention policy (optional)")
+	def do_pull(self, subcmd, opts, file, collection):
+		"""${cmd_name}: pull image
+
+		${cmd_usage}
+		${cmd_option_list}
+		"""
+		duration = parse_duration(opts.interval)
+		filetype = FileFactory().resolve(file)
+		while True:
+			self.client.upload(filetype(file), collection, opts.retention_policy)
+			time.sleep(duration.total_seconds())
 
 def execute_from_commandline(argv=None):
 	cmd = CommandLine()
