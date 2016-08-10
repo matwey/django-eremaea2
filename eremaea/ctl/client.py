@@ -2,7 +2,7 @@ import requests
 
 class Client(object):
 	def __init__(self, api, **kwargs):
-		self.api = api
+		self.api = api.rstrip('/')
 		self.kwargs = kwargs
 		self._common_headers = self._get_common_headers()
 	def _get_common_headers(self):
