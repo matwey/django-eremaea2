@@ -11,3 +11,6 @@ StandardOutput=journal
 StandardError=journal
 LimitNPROC=1
 LimitFSIZE=0
+
+[Install]
+WantedBy=multi-user.target
