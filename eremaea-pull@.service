@@ -3,6 +3,11 @@ Description=Pull django-eremaea2 for %i
 After=network.target
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/bin/eremaeactl $EREMAEACTL_GLOBAL_OPTS pull $EREMAEACTL_PULL_OPTS
-Restart=no
+Restart=always
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+LimitNPROC=1
+LimitFSIZE=0
