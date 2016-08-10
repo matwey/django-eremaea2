@@ -1,5 +1,6 @@
 import cmdln
 import time
+import sys
 from eremaea.ctl.file import FileFactory
 from eremaea.ctl.client import Client
 from django.utils.dateparse import parse_duration
@@ -56,7 +57,11 @@ class CommandLine(cmdln.Cmdln, object):
 		duration = parse_duration(opts.interval)
 		filetype = FileFactory().resolve(file)
 		while True:
-			self.client.upload(filetype(file), collection, opts.retention_policy)
+			try:
+				self.client.upload(filetype(file), collection, opts.retention_policy)
+			except Exception as e:
+				if not opts.quite:
+					sys.stderr.write(str(e) + "\n")
 			time.sleep(duration.total_seconds())
 
 def execute_from_commandline(argv=None):
