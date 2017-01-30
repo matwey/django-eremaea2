@@ -98,6 +98,15 @@ class SnapshotTest(TestCase):
 		self.assertEqual(snapshots2[2].get_previous(), snapshots2[1])
 		self.assertEqual(collection2.get_earliest(), snapshots2[0])
 		self.assertEqual(collection2.get_latest(), snapshots2[2])
+	def test_snapshot_head1(self):
+		file = ContentFile(b"123")
+		file.name = "file.jpg"
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+		url = reverse('snapshot-detail', args=[snapshot.id])
+		response = self.client.head(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIsNone(response.data['next'])
+		self.assertIsNone(response.data['prev'])
 	def test_snapshot_delete1(self):
 		file = ContentFile(b"123")
 		file.name = "file.jpg"
