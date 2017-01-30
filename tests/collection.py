@@ -38,6 +38,16 @@ class CollectionTest(TestCase):
 		response = self.client.get(url)
 		self.assertEqualUrl(response.data['begin'], reverse("snapshot-detail", args=(snapshots[0].id,)))
 		self.assertEqualUrl(response.data['end'], reverse("snapshot-detail", args=(snapshots[2].id,)))
+	def test_collection_head1(self):
+		collection = models.Collection.objects.create(name="collection", default_retention_policy=self.retention)
+		snapshots = []
+		for i in range(0,3):
+			snapshots.append(models.Snapshot.objects.create(collection = collection))
+		url = reverse('collection-detail', args=('collection',))
+		response = self.client.head(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqualUrl(response.data['begin'], reverse("snapshot-detail", args=(snapshots[0].id,)))
+		self.assertEqualUrl(response.data['end'], reverse("snapshot-detail", args=(snapshots[2].id,)))
 	def test_collection_delete1(self):
 		group1 = models.Collection.objects.create(name="delete1", default_retention_policy=self.retention)
 		url = reverse('collection-detail', args=['delete1'])
