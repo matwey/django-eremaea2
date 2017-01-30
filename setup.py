@@ -33,5 +33,12 @@ setup(
 		'Topic :: Internet :: WWW/HTTP',
 		'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
 	],
-	test_suite='runtests.runtests'
+	test_suite='runtests.runtests',
+	install_requires=[
+		'Django',
+		'djangorestframework',
+		'dj-inmemorystorage',
+		'requests',
+		'cmdln',
+	]
 )
