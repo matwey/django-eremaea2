@@ -40,7 +40,7 @@ The whole configuration is stored into the project database, there is not separa
 The ```RetentionPolicy``` model has two parameters: a lookup field ```name``` and ```duration``` that specifies time-to-live for associated objects.
 To perform actual cleanup a POST request to the endpoint ```http://example.com/eremaea/retention_policies/{name}/purge``` is required.
 The ```Collection``` model has two parameters: a lookup field ```name``` and ```default_retention_policy```.
-The ```Snapshot``` model has the following field: associated ```collection`` and ```retention_policy```, ```file``` object, and auto-now ```date```.
+The ```Snapshot``` model has the following field: associated ```collection``` and ```retention_policy```, ```file``` object, and auto-now ```date```.
 New images are uploaded by POST request to the endpoint ```http://example.com/eremaea/snapshots/?collection=collection_name&retention_policy=retention_policy_name```.
 The latest query parameter is optional one.
 
