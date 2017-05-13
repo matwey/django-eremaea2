@@ -57,12 +57,11 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 	def retrieve(self, request, pk=None):
 		response = super(SnapshotViewSet, self).retrieve(request, pk)
 		link = []
-		if 'next' in response.data:
+		if response.data['next'] is not None:
 			link.append("{0}; rel=next".format(response.data['next']))
-		if 'prev' in response.data:
+		if response.data['prev'] is not None:
 			link.append("{0}; rel=prev".format(response.data['prev']))
-		if 'file' in response.data:
-			link.append("{0}; rel=alternate".format(response.data['file']))
+		link.append("{0}; rel=alternate".format(response.data['file']))
 		if link:
 			response['Link'] = ", ".join(link)
 		return response
