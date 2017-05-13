@@ -28,7 +28,15 @@ class ContentFile(File):
 
 class HTTPFile(File):
 	def __init__(self, url):
-		self.response = requests.get(url, allow_redirects=True)
+		creds = None
+		parsed_url = urlparse(url)
+		if parsed_url.username is not None:
+			login = parsed_url.username
+			passwd = parsed_url.password
+			if parsed_url.password is None:
+				passwd = ''
+			creds = (login, passwd)
+		self.response = requests.get(url, allow_redirects=True, auth=creds)
 		self.response.raise_for_status()
 		name = [x for x in urlparse(url).path.rsplit("/") if x][-1]
 		mimetype = None
