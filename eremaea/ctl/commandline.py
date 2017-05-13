@@ -62,6 +62,7 @@ class CommandLine(cmdln.Cmdln, object):
 			except Exception as e:
 				if not opts.quite:
 					sys.stderr.write(str(e) + "\n")
+					sys.stderr.flush()
 			time.sleep(duration.total_seconds())
 
 def execute_from_commandline(argv=None):
