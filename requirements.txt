@@ -1,0 +1,4 @@
+djangorestframework
+dj-inmemorystorage
+requests
+cmdln
