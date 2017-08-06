@@ -10,7 +10,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
 	name='django-eremaea2',
-	version='2.0.10',
+	version='2.0.10.1',
 	packages=['eremaea','eremaea.ctl','eremaea.migrations'],
 	entry_points={'console_scripts': [
 		'eremaeactl = eremaea.ctl.commandline:execute_from_commandline',
@@ -37,7 +37,6 @@ setup(
 	install_requires=[
 		'Django',
 		'djangorestframework',
-		'dj-inmemorystorage',
 		'requests',
 		'cmdln',
 	]
