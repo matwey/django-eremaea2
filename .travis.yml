@@ -1,24 +1,29 @@
 language: python
 env:
-  - "DJANGO_VERSION='>=1.10,<1.11'"
-  - "DJANGO_VERSION='>=1.11,<1.12'"
-  - "DJANGO_VERSION='>=2.0,<2.1'"
-  - "DJANGO_VERSION=''"
+- DJANGO_VERSION='>=1.10,<1.11'
+- DJANGO_VERSION='>=1.11,<1.12'
+- DJANGO_VERSION='>=2.0,<2.1'
+- DJANGO_VERSION=''
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
 matrix:
   exclude:
   - python: '2.7'
     env: DJANGO_VERSION='>=2.0,<2.1'
   - python: '2.7'
     env: DJANGO_VERSION=''
-# command to install dependencies
 install:
-  - "pip install Django$DJANGO_VERSION"
-  - "pip install -r requirements.txt"
-# command to run tests
+- pip install Django$DJANGO_VERSION
+- pip install -r requirements.txt
 script:
-  - "python setup.py test"
+- python setup.py test
+deploy:
+  provider: pypi
+  user: matwey
+  password:
+    secure: PU0b/f7xse01dy5fUSzmZxRVxeFbjEKMPpRL/Zi7a1rXPN/OaNqR+YsY42ik4bectNhehFEyFNADPuMWwV6tzVYwg9LkWzaD1J9R05eKpibjGos2Cy28iYeZI06D1oEKodimIzrmXFA2icv/XZ1RjTRNFrTkSQaG1TlF6r4VovCqU2jSo7qBpxJA7zJLtobPtFL1WY0g0+d8RSqOLwGcCA7Xr+Pa7pvljAhJC1OOKuo4n5l6ButO0dRW6jSfHHovAXbd2ssyXeyADMbmkbm7pLNqUwau5uH3/tRTwpElftogEtuDnlwg3mi5vlEwrtdzGcRKabjw3hQaI5NXeRDkQQ6RlA0eh6YX5IcRTH+B8kqpOxge0/Ky1cj4QaqqCi85c+c7wKeM+n62RmYFHFOWHp3DYviicPo2+NbgfX4nEO21w597nhrLsIw8NlW4d1/qNILGfnHGo+xlD6tIUvmnaOlDdmhJnTli5Qi48j3dYnrR+Kia3i1u0gI0MrcXH+nBCCV7a/+hSZIoatal5MmiSypmmPubOCtAgTcYr8D6McaGYDP91W2gJDeHuWlV2C/M+vwfu6N6n5axkezAU+LhMAGdV7J6DQgOivaW5h9Moi4LTfiH7R3W+LXhAmknHdyzSeSmye5XNMMm1B6Nwhap+IX2tht10vFsPqtUvTt+z1Y=
+  on:
+    tags: true
