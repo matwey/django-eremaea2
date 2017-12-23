@@ -1,5 +1,8 @@
 from django.core.files.base import ContentFile
-from django.core.urlresolvers import reverse
+try:
+	from django.urls import reverse
+except ImportError:
+	from django.core.urlresolvers import reverse
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
