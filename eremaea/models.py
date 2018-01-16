@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from django.db.models import F,Q
+from django.db.models import F
 from django.utils import timezone
 from os import path
 from eremaea.conf import settings
