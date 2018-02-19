@@ -1,4 +1,5 @@
-djangorestframework
-dj-inmemorystorage
-requests
 cmdln
+dj-inmemorystorage
+djangorestframework
+requests
+six
