@@ -1,5 +1,5 @@
 from django.db.models.deletion import ProtectedError
-from django.utils.cache import add_never_cache_headers
+from django.utils.cache import patch_cache_control
 from eremaea import models, serializers
 from rest_framework import status, viewsets
 from rest_framework.decorators import detail_route
@@ -36,7 +36,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 			link.append("{0}; rel=end".format(response.data['end']))
 		if link:
 			response['Link'] = ", ".join(link)
-		add_never_cache_headers(response)
+		patch_cache_control(response, max_age=0, must_revalidate=True)
 		return response
 
 class SnapshotViewSet(viewsets.ModelViewSet):
