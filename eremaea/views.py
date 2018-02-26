@@ -1,9 +1,10 @@
 from django.db.models.deletion import ProtectedError
+from django.utils.cache import add_never_cache_headers
 from eremaea import models, serializers
 from rest_framework import status, viewsets
 from rest_framework.decorators import detail_route
-from rest_framework.response import Response
 from rest_framework.parsers import FileUploadParser
+from rest_framework.response import Response
 
 class RetentionPolicyViewSet(viewsets.ModelViewSet):
 	queryset = models.RetentionPolicy.objects.all()
@@ -35,6 +36,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 			link.append("{0}; rel=end".format(response.data['end']))
 		if link:
 			response['Link'] = ", ".join(link)
+		add_never_cache_headers(response)
 		return response
 
 class SnapshotViewSet(viewsets.ModelViewSet):
