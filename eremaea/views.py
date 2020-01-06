@@ -48,7 +48,7 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 		if 'collection' not in request.query_params:
 			return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail':'collection is not specified'})
 		if 'file' not in request.data:
-			return Response(status=status.HTTP_400_BAD_REQUEST, data={'datail':'file is not supplied'})
+			return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail':'file is not supplied'})
 		kwargs = {}
 		kwargs['file'] = request.data['file']
 		kwargs['collection'] = models.Collection.objects.get(name = request.query_params['collection'])
