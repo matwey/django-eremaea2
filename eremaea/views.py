@@ -2,7 +2,7 @@ from django.db.models.deletion import ProtectedError
 from django.utils.cache import patch_cache_control
 from eremaea import models, serializers
 from rest_framework import status, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
@@ -16,7 +16,7 @@ class RetentionPolicyViewSet(viewsets.ModelViewSet):
 			return super(RetentionPolicyViewSet, self).destroy(request, name)
 		except ProtectedError as e:
 			return Response(status=status.HTTP_400_BAD_REQUEST)
-	@detail_route(methods=['post'])
+	@action(methods=['post'], detail=True)
 	def purge(self, request, name):
 		retention_policy = models.RetentionPolicy.objects.get(name = name)
 		retention_policy.purge()
