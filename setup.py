@@ -19,6 +19,7 @@ setup(
 	license='BSD-2-Clause',
 	description='A simple Django application to store and show webcam snapshots',
 	long_description=README,
+	long_description_content_type="text/markdown",
 	url='https://github.com/matwey/django-eremaea2',
 	author='Matwey V. Kornilov',
 	author_email='matwey.kornilov@gmail.com',
