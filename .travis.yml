@@ -24,12 +24,18 @@ install:
 - pip install -r requirements.txt
 script:
 - python setup.py test
-deploy:
-  provider: pypi
-  user: matwey
-  password:
-    secure: PU0b/f7xse01dy5fUSzmZxRVxeFbjEKMPpRL/Zi7a1rXPN/OaNqR+YsY42ik4bectNhehFEyFNADPuMWwV6tzVYwg9LkWzaD1J9R05eKpibjGos2Cy28iYeZI06D1oEKodimIzrmXFA2icv/XZ1RjTRNFrTkSQaG1TlF6r4VovCqU2jSo7qBpxJA7zJLtobPtFL1WY0g0+d8RSqOLwGcCA7Xr+Pa7pvljAhJC1OOKuo4n5l6ButO0dRW6jSfHHovAXbd2ssyXeyADMbmkbm7pLNqUwau5uH3/tRTwpElftogEtuDnlwg3mi5vlEwrtdzGcRKabjw3hQaI5NXeRDkQQ6RlA0eh6YX5IcRTH+B8kqpOxge0/Ky1cj4QaqqCi85c+c7wKeM+n62RmYFHFOWHp3DYviicPo2+NbgfX4nEO21w597nhrLsIw8NlW4d1/qNILGfnHGo+xlD6tIUvmnaOlDdmhJnTli5Qi48j3dYnrR+Kia3i1u0gI0MrcXH+nBCCV7a/+hSZIoatal5MmiSypmmPubOCtAgTcYr8D6McaGYDP91W2gJDeHuWlV2C/M+vwfu6N6n5axkezAU+LhMAGdV7J6DQgOivaW5h9Moi4LTfiH7R3W+LXhAmknHdyzSeSmye5XNMMm1B6Nwhap+IX2tht10vFsPqtUvTt+z1Y=
-  distributions: "sdist bdist_wheel"
-  skip_existing: true
-  on:
-    tags: true
+
+jobs:
+  include:
+    - stage: deploy
+      script: skip
+      python: '3.6'
+      deploy: &pypi
+        provider: pypi
+        user: matwey
+        password:
+          secure: "KR+BglUiEjxkh9SEI0En/JMUlXSA8njRAutKuSHylV2C/z9wJcfKiwqdYXE7XKt+nDSsHTHHNlGIRPZceA71/SB8loXcvihsP6Bu+xhTKbvTF6VZ4gFd+t5fWn8pTB1S5B80tlFvVGEC/JJGczL6mbd2xf9ohSVV5C/BH/AbHwNwl0lOCXYr4dvdaqLK4cnzGz477HF9okyrJ4uruYg77jinWLAtXbsWe7Io7hpSmQewLel4sPsNi+Axlf9XBsTu6cme6kb9ypdZlmdXhn6y54VoW6a1TU7v9dYrmM2sIezmLiP3iRsFsvCYp1QCX2gpi0eDgOHi4EMGxKnI5PfH0FUElLweH+RIPaCtHtWR+5qwcwJdITocl29hRMxXAHPphi5tzENUZLEfGuMmDIBP8fzWqLBtxjqRBjY4GkzjjWtGJyWVL/ebOyxVoC5BEtbvJ7JQLLLHKgZfsK4cqhCcQ5lHXrah+lcRELZToy8m/eD00rCHjSUYCDzqlKatEGEu224uHgzW2S0WCJnj2UEPPJ5+2ntmLoYKRD0XhBHSObcKSW+SuVk/rQPHyjoQLidzIL7wvU/8+8gNCzofjDjIzW8bqsv6QcJhuie83oqnkP1wK+DK6T2qM37S0Ppgln2UjMH3NX2Yxb4/kpW92UZy7bdLRmJWXLmnMkPSPLJGDe4="
+        skip_existing: true
+        distributions: sdist bdist_wheel
+        on:
+          tags: true
