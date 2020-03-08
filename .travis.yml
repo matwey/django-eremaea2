@@ -9,7 +9,13 @@ python:
 - '3.4'
 - '3.5'
 - '3.6'
-matrix:
+install:
+- pip install Django$DJANGO_VERSION
+- pip install -r requirements.txt
+script:
+- python setup.py test
+
+jobs:
   exclude:
   - python: '2.7'
     env: DJANGO_VERSION='>=2.0,<2.1'
@@ -19,13 +25,6 @@ matrix:
     env: DJANGO_VERSION='>=2.1,<2.2'
   - python: '2.7'
     env: DJANGO_VERSION=''
-install:
-- pip install Django$DJANGO_VERSION
-- pip install -r requirements.txt
-script:
-- python setup.py test
-
-jobs:
   include:
     - stage: deploy
       script: skip
