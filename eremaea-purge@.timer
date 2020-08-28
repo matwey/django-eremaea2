@@ -1,10 +1,11 @@
 [Unit]
 Description=Purge django-eremaea2 for %i once a hour
 After=network.target
+PartOf=eremaea.target
 
 [Timer]
 OnCalendar=hourly
 AccuracySec=5min
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target eremaea.target

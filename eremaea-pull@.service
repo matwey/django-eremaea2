@@ -1,6 +1,7 @@
 [Unit]
 Description=Pull django-eremaea2 for %i
 After=network.target
+PartOf=eremaea.target
 
 [Service]
 Type=simple
@@ -13,4 +14,4 @@ LimitNPROC=1
 LimitFSIZE=0
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target eremaea.target
