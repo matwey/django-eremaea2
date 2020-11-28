@@ -2,6 +2,7 @@ from six.moves.urllib.parse import urlparse
 import os.path
 import requests
 import mimetypes
+from requests_toolbelt.auth.guess import GuessAuth
 
 class File(object):
 	def __init__(self, name, mimetype):
@@ -35,7 +36,7 @@ class HTTPFile(File):
 			passwd = parsed_url.password
 			if parsed_url.password is None:
 				passwd = ''
-			creds = (login, passwd)
+			creds = GuessAuth(login, passwd)
 		self.response = requests.get(url, allow_redirects=True, auth=creds)
 		self.response.raise_for_status()
 		name = [x for x in urlparse(url).path.rsplit("/") if x][-1]
