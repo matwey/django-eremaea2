@@ -1,7 +1,7 @@
 import cmdln
 import time
 import sys
-from eremaea.ctl.file import FileFactory
+from eremaea.ctl.file import create_stream
 from eremaea.ctl.client import Client
 from django.utils.dateparse import parse_duration
 
@@ -31,7 +31,7 @@ class CommandLine(cmdln.Cmdln, object):
 		${cmd_usage}
 		${cmd_option_list}
 		"""
-		self.client.upload(FileFactory().create(file), collection, opts.retention_policy)
+		self.client.upload(next(create_stream(file)), collection, opts.retention_policy)
 	@cmdln.option("--all", dest="all", action="store_true", help="purge all retention policies")
 	def do_purge(self, subcmd, opts, *retention_policies):
 		"""${cmd_name}: purge retention policies
@@ -55,10 +55,10 @@ class CommandLine(cmdln.Cmdln, object):
 		${cmd_option_list}
 		"""
 		duration = parse_duration(opts.interval)
-		filetype = FileFactory().resolve(file)
+		stream = create_stream(file)
 		while True:
 			try:
-				self.client.upload(filetype(file), collection, opts.retention_policy)
+				self.client.upload(next(stream), collection, opts.retention_policy)
 			except Exception as e:
 				if not opts.quite:
 					sys.stderr.write(str(e) + "\n")

@@ -17,7 +17,7 @@ class Client(object):
 		params = {'collection': collection}
 		if retention_policy:
 			params['retention_policy'] = retention_policy
-		r = self._session.post(url, params=params, headers=headers, data=file.read())
+		r = self._session.post(url, params=params, headers=headers, data=file.content)
 		if r.status_code == 201:
 			return True
 		r.raise_for_status()

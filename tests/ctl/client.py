@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from django.core.files.base import ContentFile as DjangoContentFile
+from django.core.files.base import ContentFile
 from django.contrib.auth.models import User
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import LiveServerTestCase
 from eremaea import models
 from eremaea.ctl.client import Client
-from eremaea.ctl.file import ContentFile
+from eremaea.ctl.file import File
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -17,19 +16,23 @@ except ImportError:
 	from mock import patch
 
 class ClientTest(LiveServerTestCase):
+	@property
+	def api_endpoint(self):
+		return self.live_server_url
+
 	def setUp(self):
-		self.client = Client(self.live_server_url)
+		self.client = Client(self.api_endpoint)
 
 	def test_upload1(self):
 		content = b"123"
 		retention_policy = models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name="mycol", default_retention_policy=retention_policy)
-		self.assertTrue(self.client.upload(ContentFile(content,"file.jpg","image/jpeg"), "mycol"))
+		self.assertTrue(self.client.upload(File("file.jpg","image/jpeg",content), "mycol"))
 		snapshot = models.Snapshot.objects.all()[0]
 		self.assertEqual(snapshot.retention_policy, retention_policy)
 		self.assertEqual(snapshot.file.read(), content)
 	def test_purge1(self):
-		file = DjangoContentFile(b"123")
+		file = ContentFile(b"123")
 		file.name = "file.jpg"
 		retention_policy = models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name="mycol", default_retention_policy=retention_policy)
@@ -51,4 +54,4 @@ class TokenAuthClientTest(ClientTest):
 	def setUp(self):
 		user = User.objects.create(username="test")
 		token = Token.objects.create(user=user)
-		self.client = Client(self.live_server_url, token = token.key)
+		self.client = Client(self.api_endpoint, token = token.key)

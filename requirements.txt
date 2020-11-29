@@ -2,5 +2,6 @@ cmdln
 dj-inmemorystorage
 djangorestframework
 requests
+requests-mock
 requests_toolbelt
 six
