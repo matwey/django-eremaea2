@@ -16,6 +16,9 @@ class Stream(Iterator):
 	def __iter__(self):
 		return self
 
+	def __next__(self):
+		raise NotImplementedError
+
 class LocalFileStream(Stream):
 	def __init__(self, url):
 		super(LocalFileStream, self).__init__(url)
