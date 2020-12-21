@@ -3,16 +3,31 @@ from django.db.models import F
 from django.utils import timezone
 from os import path
 from eremaea.conf import settings
+import magic
 import mimetypes
+
+def guess_extension(instance, filename):
+	content_type = getattr(instance.file.file, 'content_type', None)
+	_, ext = path.splitext(filename)
+
+	if content_type is not None:
+		valid_exts = mimetypes.guess_all_extensions(content_type)
+		if ext in valid_exts:
+			return ext
+		elif len(valid_exts):
+			return valid_exts[0]
+
+	if not ext:
+		content_type = magic.from_buffer(next(instance.file.file.chunks()), mime=True)
+		return mimetypes.guess_extension(content_type)
+
+	return ext
 
 def snapshot_upload_to(instance, filename):
 	prefix = settings.PATH
-	(mimetype, encoding) = mimetypes.guess_type(filename)
-	if not mimetype and hasattr(instance.file.file, 'content_type'):
-		mimetype = instance.file.file.content_type
-	ext = mimetypes.guess_extension(mimetype)
 	collection = instance.collection.name
 	date = instance.date.strftime("%Y-%m-%d-%H-%M-%S")
+	ext = guess_extension(instance, filename)
 	newfilename = "{0}-{1}{2}".format(collection, date, ext)
 	return path.join(prefix, collection, newfilename)
 
