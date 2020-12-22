@@ -3,6 +3,8 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
+from mimetypes import guess_all_extensions
+from os.path import splitext
 from eremaea import models
 from datetime import timedelta
 from six.moves.urllib.parse import urlparse
@@ -47,6 +49,31 @@ class SnapshotTest(TestCase):
 		url = reverse('snapshot-list') + '?collection=mycol'
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+	def test_snapshot_create5(self):
+		url = reverse('snapshot-list') + '?collection=mycol'
+		response = self.client.post(url, {}, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.png')
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		snapshot = models.Snapshot.objects.all()[0]
+		self.assertIn(splitext(snapshot.file.name)[1], guess_all_extensions('image/jpeg'))
+	def test_snapshot_create6(self):
+		url = reverse('snapshot-list') + '?collection=mycol'
+		response = self.client.post(url, {}, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		snapshot = models.Snapshot.objects.all()[0]
+		self.assertEqual(splitext(snapshot.file.name)[1], ".jpg")
+	def test_snapshot_create7(self):
+		url = reverse('snapshot-list') + '?collection=mycol'
+		response = self.client.post(url, {}, HTTP_CONTENT_DISPOSITION='attachment; filename=upload.png')
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		snapshot = models.Snapshot.objects.all()[0]
+		self.assertEqual(splitext(snapshot.file.name)[1], ".png")
+	def test_snapshot_create8(self):
+		content = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\x00\x00\x01\x00\x00\x00\x01\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0b\x49\x44\x41\x54\x78\x9c\x63\x62\x60\x00\x00\x00\x09\x00\x03\x19\x11\xd9\xe4\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82'
+		url = reverse('snapshot-list') + '?collection=mycol'
+		response = self.client.post(url, content, content_type='application/x-null', HTTP_CONTENT_DISPOSITION='attachment; filename=upload')
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		snapshot = models.Snapshot.objects.all()[0]
+		self.assertEqual(splitext(snapshot.file.name)[1], ".png")
 	def test_snapshot_get1(self):
 		file = ContentFile(b"123")
 		file.name = "file.jpg"
