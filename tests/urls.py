@@ -1,5 +1,10 @@
-from django.conf.urls import include, url
+import django
+
+if django.VERSION[0] > 1:
+	from django.urls import include, re_path
+else:
+	from django.conf.urls import include, url as re_path
 
 urlpatterns = [
-	url(r'', include('eremaea.urls')),
+	re_path(r'', include('eremaea.urls')),
 ]

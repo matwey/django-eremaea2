@@ -2,6 +2,7 @@ cmdln
 dj-inmemorystorage
 djangorestframework
 python-magic
+mock
 requests
 requests-mock
 requests_toolbelt

@@ -1,6 +1,6 @@
 # django-eremaea2
 
-[![Build Status](https://travis-ci.org/matwey/django-eremaea2.svg?branch=master)](https://travis-ci.org/matwey/django-eremaea2)
+[![Build Status](https://github.com/matwey/django-eremaea2/actions/workflows/django.yml/badge.svg)](https://github.com/matwey/django-eremaea2/actions/workflows/django.yml)
 [![PyPI version](https://badge.fury.io/py/django-eremaea2.svg)](https://badge.fury.io/py/django-eremaea2)
 
 django-eremaea2 is a simple [Django] application to store and manage webcam image snapshots.
