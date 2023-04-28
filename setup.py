@@ -38,6 +38,8 @@ setup(
 		'Django',
 		'djangorestframework',
 		'requests',
+		'requests_toolbelt',
 		'cmdln',
+		'python-magic',
 	]
 )
