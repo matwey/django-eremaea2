@@ -1,6 +1,5 @@
 from collections import namedtuple
-from six import Iterator
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 import os.path
 import mimetypes
 import requests
@@ -9,7 +8,7 @@ from requests_toolbelt.auth.guess import GuessAuth
 
 File = namedtuple("File", ("name", "mimetype", "content"))
 
-class Stream(Iterator):
+class Stream:
 	def __init__(self, url):
 		self._url = url
 
@@ -21,7 +20,7 @@ class Stream(Iterator):
 
 class LocalFileStream(Stream):
 	def __init__(self, url):
-		super(LocalFileStream, self).__init__(url)
+		super().__init__(url)
 
 	def __next__(self):
 		with open(self._url, "rb") as f:
@@ -31,7 +30,7 @@ class LocalFileStream(Stream):
 
 class HTTPFileStream(Stream):
 	def __init__(self, url):
-		super(HTTPFileStream, self).__init__(url)
+		super().__init__(url)
 
 		parsed_url = urlparse(url)
 

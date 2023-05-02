@@ -7,7 +7,7 @@ from mimetypes import guess_all_extensions
 from os.path import splitext
 from eremaea import models
 from datetime import timedelta
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 class SnapshotTest(TestCase):
 	def setUp(self):
@@ -132,7 +132,7 @@ class SnapshotTest(TestCase):
 		url = reverse('snapshot-detail', args=[snapshot.id])
 		response = self.client.get(url)
 		link_hdr = response['Link']
-		self.assertEqual(link_hdr, '{0}; rel=alternate'.format(response.data['file']))
+		self.assertEqual(link_hdr, '{}; rel=alternate'.format(response.data['file']))
 	def test_snapshot_head1(self):
 		file = ContentFile(b"123")
 		file.name = "file.jpg"

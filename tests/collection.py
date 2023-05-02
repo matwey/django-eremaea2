@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from eremaea import models
 from datetime import timedelta
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 class CollectionTest(TestCase):
 	def setUp(self):
