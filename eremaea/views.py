@@ -23,7 +23,7 @@ class RetentionPolicyViewSet(viewsets.ModelViewSet):
 		return Response(status=status.HTTP_201_CREATED)
 
 class CollectionViewSet(viewsets.ModelViewSet):
-	queryset = models.Collection.objects.all()
+	queryset = models.Collection.objects.select_related("default_retention_policy")
 	serializer_class = serializers.CollectionSerializer
 	lookup_field = 'name'
 
@@ -40,7 +40,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 		return response
 
 class SnapshotViewSet(viewsets.ModelViewSet):
-	queryset = models.Snapshot.objects.all()
+	queryset = models.Snapshot.objects.select_related("collection", "retention_policy")
 	serializer_class = serializers.SnapshotSerializer
 	parser_classes = (FileUploadParser,)
 
