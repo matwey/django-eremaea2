@@ -81,7 +81,6 @@ class Snapshot(models.Model):
 			pass
 
 	class Meta:
-		index_together = ['collection', 'date', 'retention_policy']
 		ordering = ['-date']
 		get_latest_by = 'date'
 
