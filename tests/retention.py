@@ -13,17 +13,41 @@ class RetentionPolicyTest(TestCase):
 	def setUp(self):
 		self.client = APIClient()
 	
-	def test_retention_create1(self):
-		url = reverse('retention_policy-list')
-		response = self.client.post(url, {'name': 'daily', 'duration': '01 00'}, format='json')
-		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-		response = self.client.post(url, {'name': 'daily', 'duration': '02 00'}, format='json')
-		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-		group1 = models.RetentionPolicy.objects.get(name="daily")
-		self.assertEqual(group1.duration, timedelta(days=1))
+	def test_retention_initial_daily(self):
 		url = reverse('retention_policy-detail', args=['daily'])
 		response = self.client.get(url, format='json')
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(response.data['duration'], '1 00:00:00')
+
+	def test_retention_initial_weekly(self):
+		url = reverse('retention_policy-detail', args=['weekly'])
+		response = self.client.get(url, format='json')
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['duration'], '7 00:00:00')
+
+	def test_retention_initial_monthly(self):
+		url = reverse('retention_policy-detail', args=['monthly'])
+		response = self.client.get(url, format='json')
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['duration'], '30 00:00:00')
+
+	def test_retention_initial_annual(self):
+		url = reverse('retention_policy-detail', args=['annual'])
+		response = self.client.get(url, format='json')
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['duration'], '365 00:00:00')
+
+	def test_retention_create1(self):
+		url = reverse('retention_policy-list')
+		response = self.client.post(url, {'name': 'biweekly', 'duration': '14 00'}, format='json')
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		response = self.client.post(url, {'name': 'biweekly', 'duration': '14 00'}, format='json')
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+		group1 = models.RetentionPolicy.objects.get(name="biweekly")
+		self.assertEqual(group1.duration, timedelta(days=14))
+		url = reverse('retention_policy-detail', args=['biweekly'])
+		response = self.client.get(url, format='json')
+		self.assertEqual(response.data['duration'], '14 00:00:00')
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 	def test_retention_delete1(self):
 		group1 = models.RetentionPolicy.objects.create(id=123, name="test", duration=timedelta(days=1))
@@ -35,15 +59,15 @@ class RetentionPolicyTest(TestCase):
 		self.assertRaises(models.RetentionPolicy.DoesNotExist, models.RetentionPolicy.objects.get, name="test")
 	def test_retention_delete2(self):
 		# Retention deletion is protected by collection
-		retention = models.RetentionPolicy.objects.create(name='daily', duration=timedelta(days=1))
+		retention, created = models.RetentionPolicy.objects.get_or_create(name='daily', duration=timedelta(days=1))
 		collection = models.Collection.objects.create(name='test', default_retention_policy=retention)
 		url = reverse('retention_policy-detail', args=['daily'])
 		response = self.client.delete(url)
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 	def test_retention_delete3(self):
 		# Retention deletion is protected by snapshot
-		retention_daily  = models.RetentionPolicy.objects.create(name='daily',  duration=timedelta(days=1))
-		retention_hourly = models.RetentionPolicy.objects.create(name='hourly', duration=timedelta(hours=1))
+		retention_daily, created  = models.RetentionPolicy.objects.get_or_create(name='daily',  duration=timedelta(days=1))
+		retention_hourly, created = models.RetentionPolicy.objects.get_or_create(name='hourly', duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name='test', default_retention_policy=retention_daily)
 		snapshot = models.Snapshot.objects.create(collection = collection, retention_policy=retention_hourly)
 		url = reverse('retention_policy-detail', args=['hourly'])
@@ -52,8 +76,8 @@ class RetentionPolicyTest(TestCase):
 	def test_retention_purge1(self):
 		file = ContentFile(b"123")
 		file.name = "file.jpg"
-		retention_daily  = models.RetentionPolicy.objects.create(name='daily',  duration=timedelta(days=1))
-		retention_hourly = models.RetentionPolicy.objects.create(name='hourly', duration=timedelta(hours=1))
+		retention_daily, created  = models.RetentionPolicy.objects.get_or_create(name='daily',  duration=timedelta(days=1))
+		retention_hourly, created = models.RetentionPolicy.objects.get_or_create(name='hourly', duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name='test', default_retention_policy=retention_hourly)
 		dates = [datetime.now(), datetime.now() - timedelta(minutes=30), datetime.now() - timedelta(minutes=90)]
 		snapshots = [models.Snapshot.objects.create(collection = collection, date = x, file = file) for x in dates]

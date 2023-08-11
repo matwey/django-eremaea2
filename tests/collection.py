@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 class CollectionTest(TestCase):
 	def setUp(self):
 		self.client = APIClient()
-		self.retention = models.RetentionPolicy.objects.create(name="daily", duration=timedelta(days=1))
+		self.retention, created = models.RetentionPolicy.objects.get_or_create(name="daily", duration=timedelta(days=1))
 	def tearDown(self):
 		pass
 	
