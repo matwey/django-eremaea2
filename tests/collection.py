@@ -6,6 +6,7 @@ from django.core.files.base import ContentFile
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework.utils.urls import replace_query_param
 from eremaea import models
 from datetime import timedelta
 from urllib.parse import urlparse
@@ -78,3 +79,14 @@ class CollectionTest(TestCase):
 		response = self.client.delete(url)
 		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+	def test_collection_filter_by_retention_policy(self):
+		daily = models.RetentionPolicy.objects.get(name='daily')
+		weekly = models.RetentionPolicy.objects.get(name='weekly')
+		collection = models.Collection.objects.create(name='collection', default_retention_policy=daily)
+		alternative = models.Collection.objects.create(name='alternative', default_retention_policy=weekly)
+
+		url = reverse('collection-list')
+		url = replace_query_param(url, 'default_retention_policy', 'daily')
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data), 1)

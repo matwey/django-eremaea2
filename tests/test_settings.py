@@ -9,6 +9,7 @@ INSTALLED_APPS = [
 	'django.contrib.auth',
 	'rest_framework',
 	'rest_framework.authtoken',
+	'django_filters',
 	'inmemorystorage',
 	'eremaea',
 ]

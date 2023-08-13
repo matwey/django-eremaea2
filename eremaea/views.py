@@ -2,6 +2,7 @@ import datetime
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 from django.utils.cache import patch_cache_control
+from django_filters import rest_framework as filters
 from eremaea import models, serializers
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, parser_classes
@@ -11,6 +12,13 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.utils.urls import replace_query_param
 
+
+class CollectionFilter(filters.FilterSet):
+	default_retention_policy = filters.ModelChoiceFilter(queryset=models.RetentionPolicy.objects.all(), to_field_name="name")
+
+	class Meta:
+		model = models.Collection
+		fields = ['default_retention_policy']
 
 class SnapshotPagination(CursorPagination):
 	ordering = '-date'
@@ -41,7 +49,7 @@ class SnapshotPagination(CursorPagination):
 		if cursor.position is not None:
 			position = str(int((cursor.position - self.time_origin) / datetime.datetime.resolution))
 		else:
-			position = ""
+			position = ''
 		offset   = str(cursor.offset)
 		reverse  = str(int(cursor.reverse))
 		encoded  = self.cursor_separator.join([position, offset, reverse])
@@ -56,7 +64,7 @@ class SnapshotPagination(CursorPagination):
 			attr = getattr(instance, field_name)
 
 		assert isinstance(attr, datetime.datetime), (
-			"Invalid ordering value type. Expected datetime.datetime type, but got {type}".format(type=type(attr).__name__)
+			'Invalid ordering value type. Expected datetime.datetime type, but got {type}'.format(type=type(attr).__name__)
 		)
 
 		return attr
@@ -68,6 +76,14 @@ class SnapshotContentNegotiation(api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS)
 			return FileUploadParser()
 
 		return super(SnapshotContentNegotiation, self).select_parser(request, parsers)
+
+class SnapshotFilter(filters.FilterSet):
+	retention_policy = filters.ModelChoiceFilter(queryset=models.RetentionPolicy.objects.all(), to_field_name="name")
+	date = filters.IsoDateTimeFromToRangeFilter()
+
+	class Meta:
+		model = models.Snapshot
+		fields = ['retention_policy', 'date']
 
 
 class RetentionPolicyViewSet(viewsets.ModelViewSet):
@@ -88,17 +104,21 @@ class RetentionPolicyViewSet(viewsets.ModelViewSet):
 		return Response(status=status.HTTP_201_CREATED)
 
 class CollectionViewSet(viewsets.ModelViewSet):
-	queryset = models.Collection.objects.select_related("default_retention_policy")
+	queryset = models.Collection.objects.select_related('default_retention_policy')
 	serializer_class = serializers.CollectionSerializer
 	lookup_field = 'name'
+	filter_backends = [filters.DjangoFilterBackend]
+	filterset_class = CollectionFilter
 
 class SnapshotViewSet(viewsets.ModelViewSet):
-	queryset = models.Snapshot.objects.select_related("collection", "retention_policy")
+	queryset = models.Snapshot.objects.select_related('collection', 'retention_policy')
 	serializer_class = serializers.SnapshotSerializer
 	create_serializer_class = serializers.CreateSnapshotSerializer
 	list_serializer_class = serializers.ListSnapshotSerializer
 	pagination_class = SnapshotPagination
 	content_negotiation_class = SnapshotContentNegotiation
+	filter_backends = [filters.DjangoFilterBackend]
+	filterset_class = SnapshotFilter
 
 	def get_queryset(self):
 		collection_name = self.kwargs['collection']
@@ -113,31 +133,31 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 		return queryset.filter(collection__name = collection_name)
 
 	def _get_create_serializer(self, request):
-		file = request.data.get("file")
+		file = request.data.get('file')
 		retention_policy = request.query_params.get('retention_policy')
 
 		data = {
-			"file": file,
-			"retention_policy": retention_policy,
+			'file': file,
+			'retention_policy': retention_policy,
 		}
 
 		return super(SnapshotViewSet, self).get_serializer(data = data)
 
 	def get_serializer(self, *args, **kwargs):
-		if self.action == "create":
+		if self.action == 'create':
 			return self._get_create_serializer(self.request)
 
 		return super(SnapshotViewSet, self).get_serializer(*args, **kwargs)
 
 	def get_serializer_class(self):
-		if self.action == "create":
+		if self.action == 'create':
 			return self.create_serializer_class
-		elif self.action == "list":
+		elif self.action == 'list':
 			return self.list_serializer_class
 
 		return super(SnapshotViewSet, self).get_serializer_class()
 
 	def retrieve(self, request, pk=None, collection=None):
 		response = super(SnapshotViewSet, self).retrieve(request, pk = pk, collection = collection)
-		response["Link"] = "{0}; rel=alternate".format(response.data['file'])
+		response['Link'] = '{0}; rel=alternate'.format(response.data['file'])
 		return response

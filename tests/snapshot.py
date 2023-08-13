@@ -4,6 +4,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
+from rest_framework.utils.urls import replace_query_param
 from mimetypes import guess_all_extensions
 from os.path import splitext
 from eremaea import models
@@ -51,7 +52,8 @@ class SnapshotTest(TestCase):
 		content = b'test'
 		retention_policy = models.RetentionPolicy.objects.get(name='weekly')
 
-		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name}) + '?retention_policy=' + retention_policy.name
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		url = replace_query_param(url, 'retention_policy', retention_policy.name)
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -62,7 +64,8 @@ class SnapshotTest(TestCase):
 	def test_snapshot_create_with_not_existing_retention_policy(self):
 		content = b'test'
 
-		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name}) + '?retention_policy=not_exists'
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		url = replace_query_param(url, 'retention_policy', 'not_exists')
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -290,27 +293,26 @@ class SnapshotTest(TestCase):
 		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
 		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
 
-		url = reverse('snapshot-list', kwargs = {
-			'collection': self.collection.name
-		}) + '?page_size=1'
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		url = replace_query_param(url, 'page_size', 1)
 		response = self.client.get(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertIn("next", response.data)
-		self.assertIsNotNone(response.data["next"])
-		self.assertIn("previous", response.data)
-		self.assertIsNone(response.data["previous"])
-		self.assertIn("results", response.data)
-		self.assertEqual(len(response.data["results"]), 1)
+		self.assertIn('next', response.data)
+		self.assertIsNotNone(response.data['next'])
+		self.assertIn('previous', response.data)
+		self.assertIsNone(response.data['previous'])
+		self.assertIn('results', response.data)
+		self.assertEqual(len(response.data['results']), 1)
 
-		url = response.data["next"]
+		url = response.data['next']
 		response = self.client.get(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertIn("next", response.data)
-		self.assertIsNone(response.data["next"])
-		self.assertIn("previous", response.data)
-		self.assertIsNotNone(response.data["previous"])
-		self.assertIn("results", response.data)
-		self.assertEqual(len(response.data["results"]), 1)
+		self.assertIn('next', response.data)
+		self.assertIsNone(response.data['next'])
+		self.assertIn('previous', response.data)
+		self.assertIsNotNone(response.data['previous'])
+		self.assertIn('results', response.data)
+		self.assertEqual(len(response.data['results']), 1)
 
 	def test_snapshot_list_from_not_existing_collection(self):
 		url = reverse('snapshot-list', kwargs = {'collection': 'not_exists'})
@@ -322,3 +324,33 @@ class SnapshotTest(TestCase):
 		response = self.client.get(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+	def test_snapshot_filter_by_retention_policy(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		daily = models.RetentionPolicy.objects.get(name='daily')
+		weekly = models.RetentionPolicy.objects.get(name='weekly')
+		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, retention_policy = daily)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, retention_policy = weekly)
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		url = replace_query_param(url, 'retention_policy', 'daily')
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data), 1)
+
+	def test_snapshot_filter_by_date_range(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot1 = models.Snapshot.objects.create(collection = self.collection,
+			file = file, date = datetime.datetime(2001, 1, 1))
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection,
+			file = file, date = datetime.datetime(2001, 1, 3))
+		snapshot3 = models.Snapshot.objects.create(collection = self.collection,
+			file = file, date = datetime.datetime(2001, 1, 5))
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		url = replace_query_param(url, 'date_after', '2001-01-02T00:00:00')
+		url = replace_query_param(url, 'date_before', '2001-01-03T00:00:00')
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data), 1)

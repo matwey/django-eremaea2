@@ -36,6 +36,7 @@ setup(
 	test_suite='runtests.runtests',
 	install_requires=[
 		'Django',
+		'django-filter',
 		'djangorestframework',
 		'requests',
 		'requests_toolbelt',

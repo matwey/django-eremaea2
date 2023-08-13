@@ -1,8 +1,9 @@
 cmdln
 dj-inmemorystorage
+django-filter
 djangorestframework
-python-magic
 mock
+python-magic
 requests
 requests-mock
 requests_toolbelt
