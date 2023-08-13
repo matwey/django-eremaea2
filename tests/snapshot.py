@@ -1,3 +1,4 @@
+import datetime
 from django.core.files.base import ContentFile
 from django.test import TestCase
 from rest_framework import status
@@ -12,143 +13,312 @@ from urllib.parse import urlparse
 class SnapshotTest(TestCase):
 	def setUp(self):
 		self.client = APIClient()
-		self.retention, created = models.RetentionPolicy.objects.get_or_create(name="daily", duration=timedelta(days=1))
-		self.collection = models.Collection.objects.create(name="mycol", default_retention_policy=self.retention)
+		self.retention = models.RetentionPolicy.objects.get(name='daily')
+		self.collection = models.Collection.objects.create(name='collection', default_retention_policy = self.retention)
+
 	def tearDown(self):
 		self.collection.delete()
-		self.retention.delete()
 	
 	def assertEqualUrl(self, x, y):
 		path_x = urlparse(x).path
 		path_y = urlparse(y).path
 		return self.assertEqual(path_x, path_y)
-	def test_snapshot_create1(self):
-		content = b'123'
-		url = reverse('snapshot-list')
+
+	def test_snapshot_create_in_not_existing_collection(self):
+		content = b'test'
+
+		url = reverse('snapshot-list', kwargs = {'collection': 'not_exists'})
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
-		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-	def test_snapshot_create2(self):
-		content = b'123'
-		url = reverse('snapshot-list') + '?collection=mycol'
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_snapshot_create(self):
+		content = b'test'
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 		snapshot = models.Snapshot.objects.all()[0]
 		self.assertEqual(snapshot.retention_policy, self.retention)
 		self.assertEqual(snapshot.file.read(), content)
-	def test_snapshot_create3(self):
-		content = b'123'
-		retention_hourly = models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
-		url = reverse('snapshot-list') + '?collection=mycol&retention_policy=hourly'
+		self.assertIn('Location', response)
+		self.assertIn(reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id
+		}), response['Location'])
+
+	def test_snapshot_create_with_retention_policy(self):
+		content = b'test'
+		retention_policy = models.RetentionPolicy.objects.get(name='weekly')
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name}) + '?retention_policy=' + retention_policy.name
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 		snapshot = models.Snapshot.objects.all()[0]
-		self.assertEqual(snapshot.retention_policy, retention_hourly)
+		self.assertEqual(snapshot.retention_policy, retention_policy)
 		self.assertEqual(snapshot.file.read(), content)
-	def test_snapshot_create4(self):
-		content = b''
-		url = reverse('snapshot-list') + '?collection=mycol'
+
+	def test_snapshot_create_with_not_existing_retention_policy(self):
+		content = b'test'
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name}) + '?retention_policy=not_exists'
 		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-	def test_snapshot_create5(self):
-		url = reverse('snapshot-list') + '?collection=mycol'
+
+	def test_snapshot_create_with_empty_payload(self):
+		content = b''
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		response = self.client.post(url, content, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+	def test_snapshot_create_guess_by_content_type(self):
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+
 		response = self.client.post(url, {}, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.png')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 		snapshot = models.Snapshot.objects.all()[0]
 		self.assertIn(splitext(snapshot.file.name)[1], guess_all_extensions('image/jpeg'))
-	def test_snapshot_create6(self):
-		url = reverse('snapshot-list') + '?collection=mycol'
+
+	def test_snapshot_create_guess_by_content_type_ext(self):
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+
 		response = self.client.post(url, {}, content_type='image/jpeg', HTTP_CONTENT_DISPOSITION='attachment; filename=upload.jpg')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 		snapshot = models.Snapshot.objects.all()[0]
-		self.assertEqual(splitext(snapshot.file.name)[1], ".jpg")
-	def test_snapshot_create7(self):
-		url = reverse('snapshot-list') + '?collection=mycol'
+		self.assertEqual(splitext(snapshot.file.name)[1], '.jpg')
+
+	def test_snapshot_create_guess_by_filename(self):
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+
 		response = self.client.post(url, {}, HTTP_CONTENT_DISPOSITION='attachment; filename=upload.png')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 		snapshot = models.Snapshot.objects.all()[0]
-		self.assertEqual(splitext(snapshot.file.name)[1], ".png")
-	def test_snapshot_create8(self):
+		self.assertEqual(splitext(snapshot.file.name)[1], '.png')
+
+	def test_snapshot_create_guess_by_content(self):
 		content = b'\x89\x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\x00\x00\x01\x00\x00\x00\x01\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0b\x49\x44\x41\x54\x78\x9c\x63\x62\x60\x00\x00\x00\x09\x00\x03\x19\x11\xd9\xe4\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60\x82'
-		url = reverse('snapshot-list') + '?collection=mycol'
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
 		response = self.client.post(url, content, content_type='application/x-null', HTTP_CONTENT_DISPOSITION='attachment; filename=upload')
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 		snapshot = models.Snapshot.objects.all()[0]
-		self.assertEqual(splitext(snapshot.file.name)[1], ".png")
-	def test_snapshot_get1(self):
-		file = ContentFile(b"123")
-		file.name = "file.jpg"
+		self.assertEqual(splitext(snapshot.file.name)[1], '.png')
+
+	def test_snapshot_get(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
 		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
-		url = reverse('snapshot-detail', args=[snapshot.id])
-		response = self.client.get(url)
-		self.assertIsNone(response.data['next'])
-		self.assertIsNone(response.data['prev'])
-	def test_snapshot_get2(self):
-		file = ContentFile(b"123")
-		file.name = "file.jpg"
-		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file)
-		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file)
-		snapshot3 = models.Snapshot.objects.create(collection = self.collection, file = file)
-		url = reverse('snapshot-detail', args=[snapshot1.id])
-		response = self.client.get(url)
-		self.assertEqualUrl(response.data['next'], reverse("snapshot-detail", args=(snapshot2.id,)))
-		self.assertIsNone(response.data['prev'])
-		url = reverse('snapshot-detail', args=[snapshot2.id])
-		response = self.client.get(url)
-		self.assertEqualUrl(response.data['next'], reverse("snapshot-detail", args=(snapshot3.id,)))
-		self.assertEqualUrl(response.data['prev'], reverse("snapshot-detail", args=(snapshot1.id,)))
-		url = reverse('snapshot-detail', args=[snapshot3.id])
-		response = self.client.get(url)
-		self.assertIsNone(response.data['next'])
-		self.assertEqualUrl(response.data['prev'], reverse("snapshot-detail", args=(snapshot2.id,)))
-	def test_snapshot_get3(self):
-		file = ContentFile(b"123")
-		file.name = "file.jpg"
-		retention_hourly = models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
-		collection1 = models.Collection.objects.create(name="collection1", default_retention_policy=retention_hourly)
-		collection2 = models.Collection.objects.create(name="collection2", default_retention_policy=retention_hourly)
-		snapshots1 = []
-		snapshots2 = []
-		for i in range(0,3):
-			snapshots1.append(models.Snapshot.objects.create(collection = collection1, file = file))
-			snapshots2.append(models.Snapshot.objects.create(collection = collection2, file = file))
-		# first collection
-		self.assertEqual(snapshots1[0].get_next(), snapshots1[1])
-		self.assertEqual(snapshots1[1].get_next(), snapshots1[2])
-		self.assertEqual(snapshots1[1].get_previous(), snapshots1[0])
-		self.assertEqual(snapshots1[2].get_previous(), snapshots1[1])
-		self.assertEqual(collection1.get_earliest(), snapshots1[0])
-		self.assertEqual(collection1.get_latest(), snapshots1[2])
-		# second collection
-		self.assertEqual(snapshots2[0].get_next(), snapshots2[1])
-		self.assertEqual(snapshots2[1].get_next(), snapshots2[2])
-		self.assertEqual(snapshots2[1].get_previous(), snapshots2[0])
-		self.assertEqual(snapshots2[2].get_previous(), snapshots2[1])
-		self.assertEqual(collection2.get_earliest(), snapshots2[0])
-		self.assertEqual(collection2.get_latest(), snapshots2[2])
-	def test_snapshot_get4(self):
-		file = ContentFile(b"123")
-		file.name = "file.jpg"
-		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
-		url = reverse('snapshot-detail', args=[snapshot.id])
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
 		response = self.client.get(url)
 		link_hdr = response['Link']
-		self.assertEqual(link_hdr, '{}; rel=alternate'.format(response.data['file']))
-	def test_snapshot_head1(self):
-		file = ContentFile(b"123")
-		file.name = "file.jpg"
-		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
-		url = reverse('snapshot-detail', args=[snapshot.id])
-		response = self.client.head(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertIsNone(response.data['next'])
-		self.assertIsNone(response.data['prev'])
-	def test_snapshot_delete1(self):
-		file = ContentFile(b"123")
-		file.name = "file.jpg"
+		self.assertEqual(link_hdr, '{}; rel=alternate'.format(response.data['file']))
+
+	def test_snapshot_get_from_not_existing_collection(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': 'not_exists',
+			'pk': snapshot.id})
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_snapshot_get_from_wrong_collection(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+		collection = models.Collection.objects.create(name='alternative', default_retention_policy = self.retention)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': collection.name,
+			'pk': snapshot.id})
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_snapshot_head(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
+		response = self.client.head(url)
+		link_hdr = response['Link']
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(link_hdr, '{}; rel=alternate'.format(response.data['file']))
+
+	def test_shapshot_update_retention_policy(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+
+		retention = 'weekly'
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
+		response = self.client.patch(url, {
+			'retention_policy': retention
+		}, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		snapshot.refresh_from_db()
+		self.assertEqual(snapshot.retention_policy, models.RetentionPolicy.objects.get(name='weekly'))
+
+	def test_shapshot_update_retention_policy_to_non_existing(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
+		response = self.client.patch(url, {
+			'retention_policy': 'not_exists'
+		}, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+	def test_shapshot_update_collection(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+
+		collection = models.Collection.objects.create(name='alternative', default_retention_policy = self.retention)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
+		response = self.client.patch(url, {
+			'collection': collection.name
+		}, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		snapshot.refresh_from_db()
+		self.assertEqual(snapshot.collection, collection)
+
+	def test_shapshot_update_collection_to_non_existing(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
+		response = self.client.patch(url, {
+			'collection': 'not_exists'
+		}, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+	def test_shapshot_update_file(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
 		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
 		storage = snapshot.file.storage
 		filepath = snapshot.file.name
-		url = reverse('snapshot-detail', args=[snapshot.id])
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
+		response = self.client.patch(url, {
+			'file': 'not_exists'
+		}, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertTrue(storage.exists(filepath))
+
+	def test_snapshot_delete(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+		storage = snapshot.file.storage
+		filepath = snapshot.file.name
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': self.collection.name,
+			'pk': snapshot.id})
 		response = self.client.delete(url)
 		self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 		self.assertFalse(storage.exists(filepath))
+
+	def test_snapshot_delete_from_wrong_collection(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot = models.Snapshot.objects.create(collection = self.collection, file = file)
+		storage = snapshot.file.storage
+		filepath = snapshot.file.name
+		collection = models.Collection.objects.create(name='alternative', default_retention_policy = self.retention)
+
+		url = reverse('snapshot-detail', kwargs = {
+			'collection': collection.name,
+			'pk': snapshot.id})
+		response = self.client.delete(url)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+		snapshot.refresh_from_db()
+		self.assertIsNotNone(snapshot.id)
+
+	def test_snapshot_list(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file)
+		snapshot3 = models.Snapshot.objects.create(collection = self.collection, file = file)
+		url = reverse('snapshot-list', kwargs = {
+			'collection': self.collection.name
+		})
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data), 3)
+
+	def test_snapshot_list_pagination(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		date = datetime.datetime(2001, 1, 1)
+		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
+
+		url = reverse('snapshot-list', kwargs = {
+			'collection': self.collection.name
+		}) + '?page_size=1'
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIn("next", response.data)
+		self.assertIsNotNone(response.data["next"])
+		self.assertIn("previous", response.data)
+		self.assertIsNone(response.data["previous"])
+		self.assertIn("results", response.data)
+		self.assertEqual(len(response.data["results"]), 1)
+
+		url = response.data["next"]
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIn("next", response.data)
+		self.assertIsNone(response.data["next"])
+		self.assertIn("previous", response.data)
+		self.assertIsNotNone(response.data["previous"])
+		self.assertIn("results", response.data)
+		self.assertEqual(len(response.data["results"]), 1)
+
+	def test_snapshot_list_from_not_existing_collection(self):
+		url = reverse('snapshot-list', kwargs = {'collection': 'not_exists'})
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+	def test_snapshot_list_from_empty_collection(self):
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+

@@ -69,17 +69,6 @@ class Snapshot(models.Model):
 		if storage.exists(path):
 			storage.delete(path)
 
-	def get_next(self):
-		try:
-			return self.get_next_by_date(collection = self.collection)
-		except Snapshot.DoesNotExist:
-			pass
-	def get_previous(self):
-		try:
-			return self.get_previous_by_date(collection = self.collection)
-		except Snapshot.DoesNotExist:
-			pass
-
 	class Meta:
 		ordering = ['-date']
 		get_latest_by = 'date'
@@ -87,17 +76,6 @@ class Snapshot(models.Model):
 class Collection(models.Model):
 	name = models.CharField(max_length=256, blank=False, unique=True, db_index=True)
 	default_retention_policy = models.ForeignKey('RetentionPolicy', on_delete=models.PROTECT)
-
-	def get_latest(self):
-		try:
-			return Snapshot.objects.filter(collection = self).latest()
-		except Snapshot.DoesNotExist:
-			pass
-	def get_earliest(self):
-		try:
-			return Snapshot.objects.filter(collection = self).earliest()
-		except Snapshot.DoesNotExist:
-			pass
 
 class RetentionPolicy(models.Model):
 	name = models.CharField(max_length=256, blank=False, null=False, unique=True, db_index=True)
