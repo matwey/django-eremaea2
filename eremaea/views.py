@@ -133,8 +133,8 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 		return queryset.filter(collection__name = collection_name)
 
 	def _get_create_serializer(self, request):
-		file = request.data.get('file')
-		retention_policy = request.query_params.get('retention_policy')
+		file = getattr(request, 'data', {}).get('file')
+		retention_policy = getattr(request, 'query_params', {}).get('retention_policy')
 
 		data = {
 			'file': file,
