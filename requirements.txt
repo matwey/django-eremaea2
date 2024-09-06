@@ -1,9 +1,9 @@
 cmdln
 dj-inmemorystorage
 djangorestframework
-python-magic
 mock
+python-magic
 requests
 requests-mock
 requests_toolbelt
-six
+setuptools
