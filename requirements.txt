@@ -1,9 +1,0 @@
-cmdln
-dj-inmemorystorage
-djangorestframework
-mock
-python-magic
-requests
-requests-mock
-requests_toolbelt
-setuptools

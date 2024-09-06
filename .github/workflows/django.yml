@@ -22,7 +22,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install Django==${{ matrix.django-version }}
-        pip install -r requirements.txt
+        pip install -e ".[dev]"
     - name: Run Tests
       run: |
-        python setup.py test
+        pytest

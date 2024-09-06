@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-eremaea2"
+version = "2.0.18"
+authors = [
+  {name = "Matwey V. Kornilov", email = "matwey.kornilov@gmail.com"},
+]
+description = "A simple Django application to store and show webcam snapshots"
+readme = "README.md"
+license = {text = "BSD-2-Clause"}
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Web Environment",
+  "Framework :: Django",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Topic :: Internet :: WWW/HTTP",
+]
+requires-python = ">= 3.7"
+dependencies = [
+  "cmdln",
+  "djangorestframework",
+  "python-magic",
+  "requests",
+  "requests_toolbelt",
+]
+
+[project.optional-dependencies]
+dev = [
+  "dj-inmemorystorage",
+  "mock",
+  "pytest",
+  "pytest-django",
+  "requests-mock",
+]
+
+[project.urls]
+Repository = "https://github.com/matwey/django-eremaea2.git"
+Issues = "https://github.com/matwey/django-eremaea2/issues"
+
+[project.scripts]
+eremaeactl = "eremaea.ctl.commandline:execute_from_commandline"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+django_find_project = false
+pythonpath = "."
+testpaths = [
+    "eremaea",
+    "tests",
+]
