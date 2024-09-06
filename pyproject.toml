@@ -48,11 +48,14 @@ Issues = "https://github.com/matwey/django-eremaea2/issues"
 [project.scripts]
 eremaeactl = "eremaea.ctl.commandline:execute_from_commandline"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
 django_find_project = false
-pythonpath = "."
+pythonpath = ". src"
 testpaths = [
-    "eremaea",
+    "src/eremaea",
     "tests",
 ]
