@@ -51,6 +51,14 @@ eremaeactl = "eremaea.ctl.commandline:execute_from_commandline"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.data-files]
+"data-files" = [
+  "eremaea-pull@.service",
+  "eremaea-purge@.service",
+  "eremaea-purge@.timer",
+  "eremaea.target",
+]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
 django_find_project = false
