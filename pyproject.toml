@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-eremaea2"
-version = "2.0.20"
+version = "2.0.21"
 authors = [
   {name = "Matwey V. Kornilov", email = "matwey.kornilov@gmail.com"},
 ]
