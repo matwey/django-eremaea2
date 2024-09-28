@@ -34,7 +34,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "dj-inmemorystorage",
+  "Django>=4.2",
   "mock",
   "pytest",
   "pytest-django",
