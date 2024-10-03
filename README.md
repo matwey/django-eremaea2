@@ -15,7 +15,6 @@ For any *snapshot* there is a *retention policy* associated with to specify how 
 
 The following prerequisites are required to operate django-eremaea2:
 * [django-rest-framework] - powerful and flexible toolkit that makes it easy to build Web APIs.
-* [dj-inmemorystorage] - a non-persistent in-memory data storage backend for Django (required for testing).
 
 To use django-eremaea2 in your django project, include the following code into your ```settings.py```:
 ```
@@ -71,4 +70,3 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 [Django]:https://www.djangoproject.com/
 [django-rest-framework]:http://www.django-rest-framework.org
-[dj-inmemorystorage]:https://pypi.python.org/pypi/dj-inmemorystorage

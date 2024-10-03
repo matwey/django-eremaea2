@@ -125,3 +125,7 @@ class RetentionPolicyTest(TestCase):
 		snapshots_actual = list(models.Snapshot.objects.all())
 		self.assertListEqual(snapshots_actual, snapshots_expected)
 		self.assertFalse(storage2.exists(filepath2))
+	def test_retention_purge2(self):
+		url = reverse('retention_policy-purge', args=['not_exists'])
+		response = self.client.post(url)
+		self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

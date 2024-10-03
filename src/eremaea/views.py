@@ -99,7 +99,7 @@ class RetentionPolicyViewSet(viewsets.ModelViewSet):
 
 	@action(methods=['post'], detail=True)
 	def purge(self, request, name):
-		retention_policy = models.RetentionPolicy.objects.get(name = name)
+		retention_policy = get_object_or_404(models.RetentionPolicy, name = name)
 		retention_policy.purge()
 		return Response(status=status.HTTP_201_CREATED)
 

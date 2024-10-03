@@ -10,7 +10,6 @@ INSTALLED_APPS = [
 	'rest_framework',
 	'rest_framework.authtoken',
 	'django_filters',
-	'inmemorystorage',
 	'eremaea',
 ]
 
@@ -39,7 +38,11 @@ FILE_UPLOAD_HANDLERS = [
 	'django.core.files.uploadhandler.MemoryFileUploadHandler',
 	'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 ]
-DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
+STORAGES = {
+	'default': {
+		'BACKEND': 'django.core.files.storage.InMemoryStorage'
+	},
+}
 MEDIA_URL = 'http://media.example.com/'
 # STATIC_URL is required for LiveServerTestCase
 STATIC_URL = 'http://static.example.com/'

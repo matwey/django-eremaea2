@@ -1,0 +1,5 @@
+graft tests
+include eremaea-pull@.service
+include eremaea-purge@.service
+include eremaea-purge@.timer
+include eremaea.target
