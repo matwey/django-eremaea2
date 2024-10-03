@@ -25,7 +25,7 @@ classifiers = [
 ]
 requires-python = ">= 3.7"
 dependencies = [
-  "cmdln",
+  "click",
   "djangorestframework",
   "python-magic",
   "requests",
@@ -46,7 +46,7 @@ Repository = "https://github.com/matwey/django-eremaea2.git"
 Issues = "https://github.com/matwey/django-eremaea2/issues"
 
 [project.scripts]
-eremaeactl = "eremaea.ctl.commandline:execute_from_commandline"
+eremaeactl = "eremaea.ctl.commandline:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
