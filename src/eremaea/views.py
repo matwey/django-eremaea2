@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.db.models.deletion import ProtectedError
 from django.utils.cache import patch_cache_control
 from eremaea import models, serializers
@@ -18,7 +19,7 @@ class RetentionPolicyViewSet(viewsets.ModelViewSet):
 			return Response(status=status.HTTP_400_BAD_REQUEST)
 	@action(methods=['post'], detail=True)
 	def purge(self, request, name):
-		retention_policy = models.RetentionPolicy.objects.get(name = name)
+		retention_policy = get_object_or_404(models.RetentionPolicy, name = name)
 		retention_policy.purge()
 		return Response(status=status.HTTP_201_CREATED)
 
