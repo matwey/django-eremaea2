@@ -1,7 +1,8 @@
 import datetime
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
-from django.utils.cache import patch_cache_control
+from django.utils.cache import patch_response_headers
+from django.utils.http import http_date
 from django_filters import rest_framework as filters
 from eremaea import models, serializers
 from rest_framework import status, viewsets
@@ -159,5 +160,11 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 
 	def retrieve(self, request, pk=None, collection=None):
 		response = super(SnapshotViewSet, self).retrieve(request, pk = pk, collection = collection)
+		instance = response.data.serializer.instance
+		retention_policy = instance.retention_policy
+
 		response['Link'] = '{0}; rel=alternate'.format(response.data['file'])
+		response['Date'] = http_date(instance.date.timestamp())
+		patch_response_headers(response, cache_timeout=retention_policy.duration.total_seconds())
+
 		return response

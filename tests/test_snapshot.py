@@ -122,9 +122,11 @@ class SnapshotTest(TestCase):
 			'collection': self.collection.name,
 			'pk': snapshot.id})
 		response = self.client.get(url)
-		link_hdr = response['Link']
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertEqual(link_hdr, '{}; rel=alternate'.format(response.data['file']))
+		self.assertEqual(response['Link'], '{}; rel=alternate'.format(response.data['file']))
+		self.assertIn('Date', response)
+		self.assertIn('Expires', response)
+		self.assertIn('Cache-Control', response)
 
 	def test_snapshot_get_from_not_existing_collection(self):
 		file = ContentFile(b'123')
