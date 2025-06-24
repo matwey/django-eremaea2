@@ -7,7 +7,8 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from eremaea import models
-from datetime import datetime,timedelta
+from datetime import timedelta
+from django.utils import timezone
 
 class RetentionPolicyTest(TestCase):
 	def setUp(self):
@@ -112,7 +113,7 @@ class RetentionPolicyTest(TestCase):
 
 		file = ContentFile(b'123')
 		file.name = 'file.jpg'
-		dates = [datetime.now(), datetime.now() - timedelta(minutes=30), datetime.now() - timedelta(minutes=90)]
+		dates = [timezone.now(), timezone.now() - timedelta(minutes=30), timezone.now() - timedelta(minutes=90)]
 		snapshots = [models.Snapshot.objects.create(collection = collection, date = x, file = file) for x in dates]
 		snapshots.append(models.Snapshot.objects.create(collection = collection, date = dates[-1], retention_policy = retention_daily, file = file))
 		storage2, filepath2 = snapshots[2].file.storage, snapshots[2].file.name

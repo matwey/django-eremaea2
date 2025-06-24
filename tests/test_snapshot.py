@@ -1,4 +1,4 @@
-import datetime
+from django.utils import timezone
 from django.core.files.base import ContentFile
 from django.test import TestCase
 from rest_framework import status
@@ -8,7 +8,7 @@ from rest_framework.utils.urls import replace_query_param
 from mimetypes import guess_all_extensions
 from os.path import splitext
 from eremaea import models
-from datetime import timedelta
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 class SnapshotTest(TestCase):
@@ -289,7 +289,7 @@ class SnapshotTest(TestCase):
 	def test_snapshot_list_pagination(self):
 		file = ContentFile(b'123')
 		file.name = 'file.jpg'
-		date = datetime.datetime(2001, 1, 1)
+		date = timezone.make_aware(datetime(2001, 1, 1))
 		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
 		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
 
@@ -342,11 +342,11 @@ class SnapshotTest(TestCase):
 		file = ContentFile(b'123')
 		file.name = 'file.jpg'
 		snapshot1 = models.Snapshot.objects.create(collection = self.collection,
-			file = file, date = datetime.datetime(2001, 1, 1))
+			file = file, date = timezone.make_aware(datetime(2001, 1, 1)))
 		snapshot2 = models.Snapshot.objects.create(collection = self.collection,
-			file = file, date = datetime.datetime(2001, 1, 3))
+			file = file, date = timezone.make_aware(datetime(2001, 1, 3)))
 		snapshot3 = models.Snapshot.objects.create(collection = self.collection,
-			file = file, date = datetime.datetime(2001, 1, 5))
+			file = file, date = timezone.make_aware(datetime(2001, 1, 5)))
 
 		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
 		url = replace_query_param(url, 'date_after', '2001-01-02T00:00:00')

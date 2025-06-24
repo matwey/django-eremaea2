@@ -49,4 +49,5 @@ STATIC_URL = 'http://static.example.com/'
 MIDDLEWARE_CLASSES = []
 ROOT_URLCONF = 'tests.urls'
 TIME_ZONE = 'UTC'
+USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

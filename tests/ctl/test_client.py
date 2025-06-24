@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 from django.core.files.base import ContentFile
 from django.contrib.auth.models import User
 from django.test import LiveServerTestCase
@@ -36,7 +37,7 @@ class ClientTest(LiveServerTestCase):
 		file.name = "file.jpg"
 		retention_policy = models.RetentionPolicy.objects.create(name="hourly", duration=timedelta(hours=1))
 		collection = models.Collection.objects.create(name="mycol", default_retention_policy=retention_policy)
-		models.Snapshot.objects.create(collection = collection, date = datetime.now() - timedelta(minutes=90), file=file)
+		models.Snapshot.objects.create(collection = collection, date = timezone.now() - timedelta(minutes=90), file=file)
 		self.assertTrue(self.client.purge("hourly"))
 		snapshots = models.Snapshot.objects.all()
 		self.assertEqual(len(snapshots), 0)
