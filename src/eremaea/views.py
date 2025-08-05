@@ -168,3 +168,19 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 		patch_response_headers(response, cache_timeout=retention_policy.duration.total_seconds())
 
 		return response
+
+	def list(self, request, collection=None):
+		response = super(SnapshotViewSet, self).list(request, collection = collection)
+
+		if hasattr(response.data, 'serializer'):
+			query_set = response.data.serializer.instance
+			instance, last_instance = query_set.first(), query_set.last()
+
+			if instance is not None:
+				retention_policy = last_instance.retention_policy
+
+				response['Date'] = http_date(instance.date.timestamp())
+				response['Expires'] = http_date(last_instance.date.timestamp() + retention_policy.duration.total_seconds())
+				patch_response_headers(response, cache_timeout=retention_policy.duration.total_seconds())
+
+		return response

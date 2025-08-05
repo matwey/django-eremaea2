@@ -13,6 +13,10 @@ INSTALLED_APPS = [
 	'eremaea',
 ]
 
+MIDDLEWARE = [
+	'django.middleware.http.ConditionalGetMiddleware',
+]
+
 TEMPLATES = [{
 	'BACKEND': 'django.template.backends.django.DjangoTemplates',
 	'APP_DIRS': True,

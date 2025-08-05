@@ -287,6 +287,9 @@ class SnapshotTest(TestCase):
 		response = self.client.get(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 3)
+		self.assertIn('Date', response)
+		self.assertIn('Expires', response)
+		self.assertIn('Cache-Control', response)
 
 	def test_snapshot_list_pagination(self):
 		file = ContentFile(b'123')
@@ -339,6 +342,9 @@ class SnapshotTest(TestCase):
 		response = self.client.get(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 1)
+		self.assertIn('Date', response)
+		self.assertIn('Expires', response)
+		self.assertIn('Cache-Control', response)
 
 	def test_snapshot_filter_by_date_range(self):
 		file = ContentFile(b'123')
@@ -356,3 +362,6 @@ class SnapshotTest(TestCase):
 		response = self.client.get(url)
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 1)
+		self.assertIn('Date', response)
+		self.assertIn('Expires', response)
+		self.assertIn('Cache-Control', response)
