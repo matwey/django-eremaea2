@@ -74,11 +74,11 @@ class Snapshot(models.Model):
 		get_latest_by = 'date'
 
 class Collection(models.Model):
-	name = models.CharField(max_length=256, blank=False, unique=True, db_index=True)
+	name = models.SlugField(max_length=256, blank=False, unique=True, db_index=True)
 	default_retention_policy = models.ForeignKey('RetentionPolicy', on_delete=models.PROTECT)
 
 class RetentionPolicy(models.Model):
-	name = models.CharField(max_length=256, blank=False, null=False, unique=True, db_index=True)
+	name = models.SlugField(max_length=256, blank=False, null=False, unique=True, db_index=True)
 	duration = models.DurationField(blank=False, null=False)
 
 	class Meta:
