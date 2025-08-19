@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.utils.urls import replace_query_param
 from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
 
 
 class CollectionFilter(filters.FilterSet):
@@ -159,6 +160,10 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 			return self.list_serializer_class
 
 		return super(SnapshotViewSet, self).get_serializer_class()
+
+	@extend_schema(request={'image/*': OpenApiTypes.BINARY})
+	def create(self, request, collection=None):
+		return super(SnapshotViewSet, self).create(request, collection)
 
 	def retrieve(self, request, pk=None, collection=None):
 		response = super(SnapshotViewSet, self).retrieve(request, pk = pk, collection = collection)
