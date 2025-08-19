@@ -9,7 +9,13 @@ INSTALLED_APPS = [
 	'django.contrib.auth',
 	'rest_framework',
 	'rest_framework.authtoken',
+	'drf_spectacular',
+	'django_filters',
 	'eremaea',
+]
+
+MIDDLEWARE = [
+	'django.middleware.http.ConditionalGetMiddleware',
 ]
 
 TEMPLATES = [{
@@ -26,6 +32,7 @@ REST_FRAMEWORK = {
 	'DEFAULT_PARSER_CLASSES': (
 		'rest_framework.parsers.JSONParser',
 	),
+	'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 DATABASES = {
 	'default': {
@@ -48,5 +55,5 @@ STATIC_URL = 'http://static.example.com/'
 MIDDLEWARE_CLASSES = []
 ROOT_URLCONF = 'tests.urls'
 TIME_ZONE = 'UTC'
-
-DEFAULT_AUTO_FIELD='django.db.models.AutoField'
+USE_TZ = True
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
