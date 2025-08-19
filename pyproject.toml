@@ -28,6 +28,7 @@ dependencies = [
   "click",
   "django-filter",
   "djangorestframework",
+  "drf_spectacular",
   "python-magic",
   "requests",
   "requests_toolbelt",

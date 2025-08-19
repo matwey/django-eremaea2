@@ -12,6 +12,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.utils.urls import replace_query_param
+from drf_spectacular.utils import extend_schema
 
 
 class CollectionFilter(filters.FilterSet):
@@ -98,9 +99,10 @@ class RetentionPolicyViewSet(viewsets.ModelViewSet):
 		except ProtectedError as e:
 			return Response(status=status.HTTP_400_BAD_REQUEST)
 
+	@extend_schema(request=None)
 	@action(methods=['post'], detail=True)
 	def purge(self, request, name):
-		retention_policy = get_object_or_404(models.RetentionPolicy, name = name)
+		retention_policy = self.get_object()
 		retention_policy.purge()
 		return Response(status=status.HTTP_201_CREATED)
 
