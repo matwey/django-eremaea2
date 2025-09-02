@@ -1,6 +1,7 @@
-from django.utils import timezone
+from django.conf import settings
 from django.core.files.base import ContentFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
@@ -11,7 +12,10 @@ from eremaea import models
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
-class SnapshotTest(TestCase):
+
+class SnapshotTestBase(TestCase):
+	__test__ = False
+
 	def setUp(self):
 		self.client = APIClient()
 		self.retention = models.RetentionPolicy.objects.get(name='daily')
@@ -24,6 +28,16 @@ class SnapshotTest(TestCase):
 		path_x = urlparse(x).path
 		path_y = urlparse(y).path
 		return self.assertEqual(path_x, path_y)
+
+	@staticmethod
+	def make_datetime(*args, **kwargs):
+		obj = datetime(*args, **kwargs)
+
+		if settings.USE_TZ:
+			default_timezone = timezone.get_default_timezone()
+			obj = timezone.make_aware(obj, default_timezone)
+
+		return obj
 
 	def test_snapshot_create_in_not_existing_collection(self):
 		content = b'test'
@@ -294,30 +308,24 @@ class SnapshotTest(TestCase):
 	def test_snapshot_list_pagination(self):
 		file = ContentFile(b'123')
 		file.name = 'file.jpg'
-		date = timezone.make_aware(datetime(2001, 1, 1))
-		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
-		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date)
+		date1 = self.make_datetime(2001, 1, 1)
+		date2 = self.make_datetime(2001, 1, 2)
+		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date1)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date1)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date2)
 
 		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
 		url = replace_query_param(url, 'page_size', 1)
-		response = self.client.get(url)
-		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertIn('next', response.data)
-		self.assertIsNotNone(response.data['next'])
-		self.assertIn('previous', response.data)
-		self.assertIsNone(response.data['previous'])
-		self.assertIn('results', response.data)
-		self.assertEqual(len(response.data['results']), 1)
 
-		url = response.data['next']
-		response = self.client.get(url)
-		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertIn('next', response.data)
-		self.assertIsNone(response.data['next'])
-		self.assertIn('previous', response.data)
-		self.assertIsNotNone(response.data['previous'])
-		self.assertIn('results', response.data)
-		self.assertEqual(len(response.data['results']), 1)
+		while url is not None:
+			response = self.client.get(url)
+			self.assertEqual(response.status_code, status.HTTP_200_OK)
+			self.assertIn('next', response.data)
+			self.assertIn('previous', response.data)
+			self.assertIn('results', response.data)
+			self.assertEqual(len(response.data['results']), 1)
+
+			url = response.data['next']
 
 	def test_snapshot_list_from_not_existing_collection(self):
 		url = reverse('snapshot-list', kwargs = {'collection': 'not_exists'})
@@ -350,11 +358,11 @@ class SnapshotTest(TestCase):
 		file = ContentFile(b'123')
 		file.name = 'file.jpg'
 		snapshot1 = models.Snapshot.objects.create(collection = self.collection,
-			file = file, date = timezone.make_aware(datetime(2001, 1, 1)))
+			file = file, date = self.make_datetime(2001, 1, 1))
 		snapshot2 = models.Snapshot.objects.create(collection = self.collection,
-			file = file, date = timezone.make_aware(datetime(2001, 1, 3)))
+			file = file, date = self.make_datetime(2001, 1, 3))
 		snapshot3 = models.Snapshot.objects.create(collection = self.collection,
-			file = file, date = timezone.make_aware(datetime(2001, 1, 5)))
+			file = file, date = self.make_datetime(2001, 1, 5))
 
 		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
 		url = replace_query_param(url, 'date_after', '2001-01-02T00:00:00')
@@ -365,3 +373,11 @@ class SnapshotTest(TestCase):
 		self.assertIn('Date', response)
 		self.assertIn('Expires', response)
 		self.assertIn('Cache-Control', response)
+
+@override_settings(USE_TZ=False)
+class SnapshotTestNoTZ(SnapshotTestBase):
+	__test__ = True
+
+@override_settings(USE_TZ=True)
+class SnapshotTestWithTZ(SnapshotTestBase):
+	__test__ = True

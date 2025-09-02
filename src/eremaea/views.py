@@ -1,6 +1,8 @@
 import datetime
+from django.conf import settings
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.cache import patch_response_headers
 from django.utils.http import http_date
 from django_filters import rest_framework as filters
@@ -27,7 +29,21 @@ class SnapshotPagination(CursorPagination):
 	ordering = '-date'
 	page_size_query_param = 'page_size'
 	cursor_separator = '.'
-	time_origin = datetime.datetime(1970, 1, 1)
+	# Cursor text is always in UTC for consistency. However, it must be
+	# converted to Django format accoring to actual settings.USE_TZ
+	time_origin = datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC)
+
+	@staticmethod
+	def _datetime_to_django(datetime):
+		if not settings.USE_TZ and timezone.is_aware(datetime):
+			datetime = timezone.make_naive(datetime, timezone.get_default_timezone())
+		return datetime
+
+	@staticmethod
+	def _datetime_from_django(datetime):
+		if timezone.is_naive(datetime):
+			datetime = timezone.make_aware(datetime, timezone.get_default_timezone())
+		return datetime
 
 	def decode_cursor(self, request):
 		encoded = request.query_params.get(self.cursor_query_param)
@@ -40,7 +56,7 @@ class SnapshotPagination(CursorPagination):
 			if not position:
 				position = None
 			else:
-				position = self.time_origin + datetime.datetime.resolution * _positive_int(position)
+				position = self._datetime_to_django(self.time_origin + datetime.datetime.resolution * _positive_int(position))
 			offset   = _positive_int(offset, cutoff=self.offset_cutoff)
 			reverse  = bool(int(reverse))
 		except (TypeError, ValueError):
@@ -50,7 +66,7 @@ class SnapshotPagination(CursorPagination):
 
 	def encode_cursor(self, cursor):
 		if cursor.position is not None:
-			position = str(int((cursor.position - self.time_origin) / datetime.datetime.resolution))
+			position = str(int((self._datetime_from_django(cursor.position) - self.time_origin) / datetime.datetime.resolution))
 		else:
 			position = ''
 		offset   = str(cursor.offset)
