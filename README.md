@@ -40,8 +40,7 @@ The ```RetentionPolicy``` model has two parameters: a lookup field ```name``` an
 To perform actual cleanup a POST request to the endpoint ```http://example.com/eremaea/retention_policies/{name}/purge``` is required.
 The ```Collection``` model has two parameters: a lookup field ```name``` and ```default_retention_policy```.
 The ```Snapshot``` model has the following field: associated ```collection``` and ```retention_policy```, ```file``` object, and auto-now ```date```.
-New images are uploaded by POST request to the endpoint ```http://example.com/eremaea/snapshots/?collection=collection_name&retention_policy=retention_policy_name```.
-The latest query parameter is optional one.
+New images are uploaded by POST request to the endpoint ```http://example.com/eremaea/snapshots/collection``` with optional ```retention_policy=retention_policy_name``` query string parameter.
 
 The other ways to configure the application are Django fixtures, Django admin interface, [django-rest-framework] web browsable interface, and REST API itself.
 
