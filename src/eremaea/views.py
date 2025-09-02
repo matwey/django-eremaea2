@@ -31,7 +31,7 @@ class SnapshotPagination(CursorPagination):
 	cursor_separator = '.'
 	# Cursor text is always in UTC for consistency. However, it must be
 	# converted to Django format accoring to actual settings.USE_TZ
-	time_origin = datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC)
+	time_origin = datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc)
 
 	@staticmethod
 	def _datetime_to_django(datetime):
