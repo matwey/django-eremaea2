@@ -204,6 +204,6 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 
 				response['Date'] = http_date(instance.date.timestamp())
 				response['Expires'] = http_date(last_instance.date.timestamp() + retention_policy.duration.total_seconds())
-				patch_response_headers(response, cache_timeout=retention_policy.duration.total_seconds())
+				patch_response_headers(response, cache_timeout=int(retention_policy.duration.total_seconds()))
 
 		return response
