@@ -302,7 +302,7 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(len(response.data), 3)
 		self.assertIn('Date', response)
 		self.assertNotIn('Expires', response)
-		self.assertEqual(response['Cache-Control'], 'no-cache')
+		self.assertIn('no-cache', response["Cache-Control"])
 
 	def test_snapshot_list_from_not_existing_collection(self):
 		url = reverse('snapshot-list', kwargs = {'collection': 'not_exists'})
@@ -329,7 +329,7 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(len(response.data), 1)
 		self.assertIn('Date', response)
 		self.assertNotIn('Expires', response)
-		self.assertEqual(response['Cache-Control'], 'no-cache')
+		self.assertIn('no-cache', response["Cache-Control"])
 
 	def test_snapshot_filter_by_date_range(self):
 		file = ContentFile(b'123')
@@ -349,7 +349,7 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(len(response.data), 1)
 		self.assertIn('Date', response)
 		self.assertNotIn('Expires', response)
-		self.assertEqual(response['Cache-Control'], 'no-cache')
+		self.assertIn('no-cache', response["Cache-Control"])
 
 	def test_snapshot_list_pagination(self):
 		file = ContentFile(b'123')
@@ -371,7 +371,7 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(len(response.data['results']), 1)
 		self.assertIn('Date', response)
 		self.assertNotIn('Expires', response)
-		self.assertEqual(response['Cache-Control'], 'no-cache')
+		self.assertIn('no-cache', response["Cache-Control"])
 		url = response.data['next']
 
 		# Second item
@@ -415,7 +415,7 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(len(response.data['results']), 1)
 		self.assertIn('Date', response)
 		self.assertNotIn('Expires', response)
-		self.assertEqual(response['Cache-Control'], 'no-cache')
+		self.assertIn('no-cache', response['Cache-Control'])
 		url = response.data['previous']
 
 

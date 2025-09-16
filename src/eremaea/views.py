@@ -104,7 +104,7 @@ class SnapshotPagination(CursorPagination):
 			retention_policy = last_instance.retention_policy
 			response['Expires'] = http_date(last_instance.date.timestamp() + retention_policy.duration.total_seconds())
 		else:
-			patch_cache_control(response, no_cache=True)
+			patch_cache_control(response, no_cache=True, max_age=0)
 
 		return response
 
@@ -226,6 +226,6 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 		date = instance.date.timestamp() if instance is not None else date_now.timestamp()
 		response['Date'] = http_date(date)
 
-		patch_cache_control(response, no_cache=True)
+		patch_cache_control(response, no_cache=True, max_age=0)
 
 		return response
