@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.cache import patch_response_headers
+from django.utils.cache import patch_cache_control, patch_response_headers
 from django.utils.http import http_date
 from django_filters import rest_framework as filters
 from eremaea import models, serializers
@@ -87,6 +87,26 @@ class SnapshotPagination(CursorPagination):
 		)
 
 		return attr
+
+	def get_paginated_response(self, data):
+		response = super(SnapshotPagination, self).get_paginated_response(data)
+
+		date_now = timezone.now()
+		date = self.page[0].date.timestamp() if self.page else date_now.timestamp()
+		response['Date'] = http_date(date)
+
+		reverse = self.cursor.reverse if self.cursor else False
+		current_position = self.cursor.position if self.cursor else None
+		is_expires = (current_position is not None and current_position < date_now and not reverse) or (reverse and self.has_previous)
+
+		if self.page and is_expires:
+			last_instance = self.page[-1]
+			retention_policy = last_instance.retention_policy
+			response['Expires'] = http_date(last_instance.date.timestamp() + retention_policy.duration.total_seconds())
+		else:
+			patch_cache_control(response, no_cache=True)
+
+		return response
 
 class SnapshotContentNegotiation(api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS):
 	def select_parser(self, request, parsers):
@@ -195,15 +215,17 @@ class SnapshotViewSet(viewsets.ModelViewSet):
 	def list(self, request, collection=None):
 		response = super(SnapshotViewSet, self).list(request, collection = collection)
 
-		if hasattr(response.data, 'serializer'):
-			query_set = response.data.serializer.instance
-			instance, last_instance = query_set.first(), query_set.last()
+		# Paginated response handled in SnapshotPagination.get_paginated_response()
+		if not hasattr(response.data, 'serializer'):
+			return response
 
-			if instance is not None:
-				retention_policy = last_instance.retention_policy
+		query_set = response.data.serializer.instance
+		instance = query_set.first()
 
-				response['Date'] = http_date(instance.date.timestamp())
-				response['Expires'] = http_date(last_instance.date.timestamp() + retention_policy.duration.total_seconds())
-				patch_response_headers(response, cache_timeout=int(retention_policy.duration.total_seconds()))
+		date_now = timezone.now()
+		date = instance.date.timestamp() if instance is not None else date_now.timestamp()
+		response['Date'] = http_date(date)
+
+		patch_cache_control(response, no_cache=True)
 
 		return response

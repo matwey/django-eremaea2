@@ -140,7 +140,6 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(response['Link'], '{}; rel=alternate'.format(response.data['file']))
 		self.assertIn('Date', response)
 		self.assertIn('Expires', response)
-		self.assertIn('Cache-Control', response)
 
 	def test_snapshot_get_from_not_existing_collection(self):
 		file = ContentFile(b'123')
@@ -302,30 +301,8 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 3)
 		self.assertIn('Date', response)
-		self.assertIn('Expires', response)
-		self.assertIn('Cache-Control', response)
-
-	def test_snapshot_list_pagination(self):
-		file = ContentFile(b'123')
-		file.name = 'file.jpg'
-		date1 = self.make_datetime(2001, 1, 1)
-		date2 = self.make_datetime(2001, 1, 2)
-		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date1)
-		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date1)
-		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date2)
-
-		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
-		url = replace_query_param(url, 'page_size', 1)
-
-		while url is not None:
-			response = self.client.get(url)
-			self.assertEqual(response.status_code, status.HTTP_200_OK)
-			self.assertIn('next', response.data)
-			self.assertIn('previous', response.data)
-			self.assertIn('results', response.data)
-			self.assertEqual(len(response.data['results']), 1)
-
-			url = response.data['next']
+		self.assertNotIn('Expires', response)
+		self.assertEqual(response['Cache-Control'], 'no-cache')
 
 	def test_snapshot_list_from_not_existing_collection(self):
 		url = reverse('snapshot-list', kwargs = {'collection': 'not_exists'})
@@ -351,8 +328,8 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 1)
 		self.assertIn('Date', response)
-		self.assertIn('Expires', response)
-		self.assertIn('Cache-Control', response)
+		self.assertNotIn('Expires', response)
+		self.assertEqual(response['Cache-Control'], 'no-cache')
 
 	def test_snapshot_filter_by_date_range(self):
 		file = ContentFile(b'123')
@@ -371,8 +348,76 @@ class SnapshotTestBase(TestCase):
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 		self.assertEqual(len(response.data), 1)
 		self.assertIn('Date', response)
+		self.assertNotIn('Expires', response)
+		self.assertEqual(response['Cache-Control'], 'no-cache')
+
+	def test_snapshot_list_pagination(self):
+		file = ContentFile(b'123')
+		file.name = 'file.jpg'
+		date1 = self.make_datetime(2001, 1, 1)
+		date2 = self.make_datetime(2001, 1, 2)
+		snapshot1 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date1)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date1)
+		snapshot2 = models.Snapshot.objects.create(collection = self.collection, file = file, date = date2)
+
+		url = reverse('snapshot-list', kwargs = {'collection': self.collection.name})
+		url = replace_query_param(url, 'page_size', 1)
+
+		# First item
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIn('next', response.data)
+		self.assertIsNone(response.data['previous'])
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertIn('Date', response)
+		self.assertNotIn('Expires', response)
+		self.assertEqual(response['Cache-Control'], 'no-cache')
+		url = response.data['next']
+
+		# Second item
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIn('next', response.data)
+		self.assertIn('previous', response.data)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertIn('Date', response)
 		self.assertIn('Expires', response)
-		self.assertIn('Cache-Control', response)
+		self.assertNotIn('Cache-Control', response)
+		url = response.data['next']
+
+		# Third item
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIsNone(response.data['next'])
+		self.assertIn('previous', response.data)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertIn('Date', response)
+		self.assertIn('Expires', response)
+		self.assertNotIn('Cache-Control', response)
+		url = response.data['previous']
+
+		# Second item in reverse
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIn('next', response.data)
+		self.assertIn('previous', response.data)
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertIn('Date', response)
+		self.assertIn('Expires', response)
+		self.assertNotIn('Cache-Control', response)
+		url = response.data['previous']
+
+		# First item in reverse
+		response = self.client.get(url)
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertIn('next', response.data)
+		self.assertIsNone(response.data['previous'])
+		self.assertEqual(len(response.data['results']), 1)
+		self.assertIn('Date', response)
+		self.assertNotIn('Expires', response)
+		self.assertEqual(response['Cache-Control'], 'no-cache')
+		url = response.data['previous']
+
 
 @override_settings(USE_TZ=False)
 class SnapshotTestNoTZ(SnapshotTestBase):
